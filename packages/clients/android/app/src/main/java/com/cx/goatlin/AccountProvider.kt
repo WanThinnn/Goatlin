@@ -8,7 +8,7 @@ import android.net.Uri
 import android.database.sqlite.SQLiteQueryBuilder
 import com.cx.goatlin.helpers.DatabaseHelper
 
-
+//Khởi động dự án 10/2024
 class AccountProvider : ContentProvider() {
 
     private lateinit var database: DatabaseHelper
