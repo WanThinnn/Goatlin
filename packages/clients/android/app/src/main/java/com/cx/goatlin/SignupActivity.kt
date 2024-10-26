@@ -15,6 +15,22 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/*
+Hardcoded Password, Privacy Violation
+- Trong phương thức createLocalAccount, mật khẩu được lưu trữ trực tiếp vào cơ sở dữ liệu mà không qua mã hóa.
+- Có thể dẫn đến Hardcoded Password và Privacy Violation, đặc biệt khi mật khẩu được lưu dưới dạng plain-text.
+Đề xuất:
+- Mật khẩu nên được băm với các thuật toán bảo mật như bcrypt, scrypt, hoặc PBKDF2.
+
+Missing input validation
+- Dữ liệu đầu vào của người dùng như name, email, và password không được kiểm tra kỹ lưỡng trước khi gửi lên server hoặc lưu trữ trong cơ sở dữ liệu. 
+- Có thể dẫn đến lỗ hổng chèn mã độc hoặc tấn công Injection.
+Đề xuất:
+- Kiểm tra và xác thực đầu vào của người dùng trước khi lưu hoặc gửi lên server. 
+- Đối với email, sử dụng các thư viện kiểm tra định dạng email chuẩn.
+
+*/
+
 class SignupActivity : AppCompatActivity() {
     private val apiService by lazy {
         Client.create()
