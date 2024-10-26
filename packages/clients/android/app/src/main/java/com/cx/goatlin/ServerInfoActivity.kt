@@ -7,6 +7,30 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import android.widget.EditText
 
+/*
+Privacy Violation
+- Đoạn code lưu trữ thông tin địa chỉ IP và port trong SharedPreferences mà không có biện pháp bảo vệ.
+- Dữ liệu nhạy cảm này có thể bị lộ hoặc bị truy cập trái phép bởi các ứng dụng khác, đặc biệt là trên các thiết bị đã bị root.
+Đề xuất:
+- Thay vì lưu trực tiếp địa chỉ IP và port dưới dạng chuỗi văn bản, nên sử dụng các cơ chế mã hóa như AES để mã hóa dữ liệu trước khi lưu vào SharedPreferences.
+- Sử dụng Secure SharedPreferences giúp mã hóa dữ liệu một cách an toàn khi lưu trữ. 
+
+Missing Rooted Device Check
+- Ứng dụng không kiểm tra xem thiết bị đã bị root hay chưa.
+- Thiết bị đã root cho phép các ứng dụng hoặc người dùng có quyền truy cập sâu vào hệ thống.
+- Có thể dẫn đến việc dữ liệu nhạy cảm bị đánh cắp hoặc sửa đổi.
+Đề xuất:
+- Kiểm tra thiết bị đã bị root hay chưa bằng cách sử dụng các thư viện hoặc phương pháp kiểm tra như RootBeer.
+
+Missing Input Validation
+- Dữ liệu đầu vào như địa chỉ IP và port không được xác minh kỹ lưỡng. 
+- Mặc dù đã có kiểm tra để xem liệu các trường này có trống hay không, nhưng không có kiểm tra xem địa chỉ IP và port có hợp lệ hay không. 
+- Có thể dẫn đến việc nhập dữ liệu không hợp lệ, gây ra các lỗi hệ thống hoặc bị khai thác.
+Đề xuất:
+- Xác minh địa chỉ IP: Sử dụng biểu thức chính quy (regex) để xác minh rằng địa chỉ IP là hợp lệ (định dạng IPv4 hoặc IPv6).
+- Xác minh port: Port phải là một số nguyên nằm trong khoảng 0-65535.
+
+*/
 
 class ServerInfoActivity : AppCompatActivity() {
     private lateinit var serverIPAddress: String
