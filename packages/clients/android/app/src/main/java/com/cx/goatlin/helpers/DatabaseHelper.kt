@@ -1,3 +1,52 @@
+/*
+Đoạn mã Kotlin này triển khai một helper cho cơ sở dữ liệu SQLite, cho phép thực hiện các thao tác lưu trữ và truy xuất thông tin tài khoản và ghi chú.
+
+1. Phân tích Logic Code
+Lớp DatabaseHelper:
+- Chịu trách nhiệm cài đặt và quản lý cơ sở dữ liệu SQLite từ tài nguyên ứng dụng (assets).
+- Cung cấp các phương thức thêm, truy xuất và cập nhật tài khoản (createAccount, getAccount, listAccounts).
+- Cung cấp các phương thức thêm, truy xuất, cập nhật ghi chú (addNote, getNote, updateNote, listNotes).
+- Kiểm tra và cài đặt lại cơ sở dữ liệu khi có thay đổi phiên bản.
+
+2. Các Lỗ Hổng Bảo Mật và Cách Khắc Phục
+2.1. Lưu trữ mật khẩu dưới dạng văn bản thuần (Plaintext):
+- Vấn đề: Mật khẩu của tài khoản được lưu trực tiếp trong cơ sở dữ liệu mà không có bất kỳ biện pháp mã hóa nào, tạo nguy cơ bị lộ thông tin nếu cơ sở dữ liệu bị truy cập trái phép.
+- Khắc phục: Mã hóa mật khẩu trước khi lưu trữ, sử dụng các thuật toán băm an toàn như PBKDF2, bcrypt hoặc scrypt. Đảm bảo mật khẩu đã băm là không thể đảo ngược và khó đoán nếu bị lộ.
+=> Chỗ này chúng ta nên xem xét hiệu xuất của Bcrypt trên Kotlin và trên C/C++. Nếu thằng nào nhanh hơn thì xài.
+
+2.2. Sử dụng mật mã yếu trong CryptoHelper:
+- Vấn đề: CryptoHelper dường như sử dụng mã hóa đơn giản như Caesar cipher (dịch chuyển ký tự). Điều này không đủ an toàn cho dữ liệu nhạy cảm như tiêu đề và nội dung ghi chú. (Đã chú thích cụ thể bên class Crytohelper)
+- Khắc phục: Sử dụng thuật toán mã hóa mạnh hơn, sử dụng luôn AES-GCM-256 để mã hóa tiêu đề và nội dung ghi chú trước khi lưu + kết hợp với 1 thuật toán bảo vệ key (đang nghiên cứu, chưa đề xuất được)
+
+
+2.3. SQL Injection do không sử dụng biện pháp tránh lệnh SQL động:
+- Vấn đề: Phương thức getAccount, listNotes, getNote, và các phương thức khác sử dụng các lệnh SQL với điều kiện lọc đầu vào mà không có biện pháp tránh SQL Injection.
+- Khắc phục: Sử dụng các truy vấn đã chuẩn hóa và áp dụng ContentValues hoặc các selectionArgs cho mọi lệnh truy vấn, không sử dụng chuỗi truy vấn trực tiếp nếu có thể.
+
+
+2.4. Thiếu xác thực trước khi thao tác với dữ liệu cá nhân:
+- Vấn đề: Các phương thức addNote, updateNote, getNote,... không thực hiện kiểm tra xác thực người dùng hoặc quyền sở hữu, dẫn đến khả năng ghi hoặc đọc dữ liệu không đúng đối tượng.
+- Khắc phục: Xác thực người dùng trước khi truy xuất hoặc thay đổi dữ liệu, đặc biệt với các phương thức truy xuất hoặc cập nhật ghi chú. Thêm một lớp kiểm tra quyền sở hữu để đảm bảo chỉ người dùng có quyền truy cập mới có thể xem hoặc chỉnh sửa.
+=> Chỗ này xem xét xem có thể sử dụng ABE được không, vì ABE nó cũng hoạt động theo thuộc tính người dùng, nhưng mà nhóm mình cần phải check kỹ, vì ABE nó chạy dựa trên những hàm số học siêu lớn và ghép cặp phức tạp, nên cũng khá tốn tài nguyên, + với việc triển khai ABE cũng phức tạp
+
+2.5. Quản lý tệp không an toàn trong installDatabaseFromAssets:
+- Vấn đề: Phương thức installDatabaseFromAssets sao chép trực tiếp cơ sở dữ liệu từ tài nguyên ứng dụng vào hệ thống mà không có cơ chế bảo vệ tệp, tạo nguy cơ bị ghi đè hoặc sao chép.
+- Khắc phục: Thiết lập quyền truy cập tệp một cách hạn chế (Context.MODE_PRIVATE) để ngăn các ứng dụng khác hoặc người dùng không xác thực có thể truy cập.
+
+
+2.6. Không đóng Cursor sau khi sử dụng:
+- Vấn đề: Các Cursor được mở trong các phương thức như getAccount, getNote không được đóng sau khi sử dụng, dễ dẫn đến rò rỉ bộ nhớ.
+- Khắc phục: Đóng Cursor ngay sau khi truy xuất dữ liệu xong, có thể sử dụng use { } để tự động đóng Cursor.
+
+
+2.7. Lưu trữ phiên bản cơ sở dữ liệu trong SharedPreferences không mã hóa:
+- Vấn đề: Thông tin phiên bản cơ sở dữ liệu được lưu trữ trực tiếp trong SharedPreferences, dễ bị truy cập nếu ứng dụng không được bảo vệ tốt.
+- Khắc phục: Sử dụng EncryptedSharedPreferences để bảo vệ các thông tin nhạy cảm khi lưu trong SharedPreferences.
+
+ */
+
+
+
 package com.cx.goatlin.helpers
 
 import android.content.ContentValues
