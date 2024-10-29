@@ -8,6 +8,9 @@ import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import com.cx.goatlin.helpers.DatabaseHelper
 
+//Không mã hóa dữ liệu nhạy cảm: có thể dẫn đến việc bị lộ dữ liệu nếu lưu trữ mà không mã hóa trong SQLite.
+//Đề xuất chỉnh sửa: Sử dụng cơ chế mã hóa để lưu trữ dữ liệu trong SQLite. Có thể dùng các thư viện như SQLCipher để bảo vệ dữ liệu trong SQLite bằng mã hóa.
+
 class NotesProvider : ContentProvider() {
 
     private lateinit var database:DatabaseHelper
@@ -15,6 +18,8 @@ class NotesProvider : ContentProvider() {
     private val NOTES = 1
     private val NOTES_ID = 2
 
+//Không có bất kỳ kiểm tra quyền truy cập nào để đảm bảo rằng chỉ các ứng dụng được cấp phép mới có thể truy cập và sửa đổi dữ liệu trong ContentProvider. Điều này có thể dẫn đến rò rỉ dữ liệu và truy cập trái phép.
+//Đề xuất chỉnh sửa: Thêm thuộc tính android:exported="false" vào AndroidManifest.xml để hạn chế truy cập từ các ứng dụng khác nếu NotesProvider không được chia sẻ. Nếu cần chia sẻ, thêm các kiểm tra quyền truy cập cụ thể hoặc xác thực để bảo vệ dữ liệu.
 
     private val sURIMatcher = UriMatcher(UriMatcher.NO_MATCH)
 
@@ -50,6 +55,9 @@ class NotesProvider : ContentProvider() {
         cursor.setNotificationUri(context.contentResolver,
                 uri)
         return cursor
+
+        //Gọi cursor.setNotificationUri trong phương thức query mà không xử lý con trỏ đúng cách có thể dẫn đến lỗi rò rỉ bộ nhớ nếu không đóng con trỏ sau khi sử dụng.
+        //Đề xuất chỉnh sửa: Đảm bảo con trỏ được đóng đúng cách khi không còn sử dụng để tránh rò rỉ bộ nhớ: "cursor?.close()"
 
     }
 
