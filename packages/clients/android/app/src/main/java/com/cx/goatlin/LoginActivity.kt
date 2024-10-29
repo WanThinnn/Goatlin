@@ -29,6 +29,10 @@ import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
 import com.cx.goatlin.models.Account
 import kotlinx.android.synthetic.main.activity_login.*
+
+    // Thư viện đã bị loại bỏ và không còn được hỗ trợ, có thể gây lỗi không mong muốn và khó khăn bảo trì mã nguồn
+    // Khắc phục: dùng ViewBinding hoặc DataBinding 
+
 import java.lang.Exception
 
 /**
@@ -68,6 +72,9 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                 this,android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this, arrayOf(android.Manifest.permission.READ_CONTACTS), 1)
+
+            //ActivityCompat, ContextCompat có thể gây lỗi nếu không kiểm tra quyền trước khi gọi
+            //Khắc phục: Kiểm tra và yêu cầu quyền truy cập cẩn thận trước khi dùng
         }
     }
 
@@ -85,6 +92,10 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
 
     private fun populateAutoComplete() {
         loaderManager.initLoader(0, null, this)
+
+        //LoaderManager đã bị loại bỏ trong các phiên bản Android mới
+        //Khắc phục: Dùng ViewModel và LiveData thay thế
+
     }
 
     /**
@@ -226,6 +237,9 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
      * the user.
      */
     inner class UserLoginTask internal constructor(private val mUsername: String, private val mPassword: String) : AsyncTask<Void, Void, Boolean>() {
+
+        // AsyncTask có thể gây rò rỉ bộ nhớ nếu không được quản lí đúng cách, khi hoạt động của nó kéo dài hơn Activity. Ngoài ra AsyncTask không phù hợp cho các tác vụ dài hạn hoặc phức tạp
+        // Khắc phục: Dùng ExecutorService hoặc WorkManager để quản lý các tác vu bất đồng bộ một cách hiệu quả hơn.
 
         override fun doInBackground(vararg params: Void): Boolean? {
             if ((mUsername == "Supervisor") and (mPassword == "MySuperSecretPassword123!")){
