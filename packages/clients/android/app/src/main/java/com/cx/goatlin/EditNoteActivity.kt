@@ -5,12 +5,16 @@ package com.cx.goatlin
 kiểm tra tính hợp lệ nào. Nếu giá trị noteId có thể bị thay đổi bởi bên tấn công, ví dụ như bằng kỹ thuật injection, có
 thể dẫn đến các hành vi không mong muốn
 - Đề xuất: Kiểm tra đầu vào của noteID trước khi sử dụng
+
 2. Cryptography Failure - thuật toán Ceasar mã hóa không đủ mạnh mẽ
 - Đề xuất sử dụng thuật toán mã hóa mạnh mẽ hơn
+
 3. Xảy ra Input Validation ở dòng 94 và 95 khi mà lưu trữ nội dung đầu vào của người dùng mà không kiểm tra tính hợp lệ của nó
 - Đề xuất: Kiểm tra đầu vào và lọc nội dung của tilte và content
+
 4. Có thể lưu các thông tin nhạy cảm của người dùng vào trong log thông qua đoạn code ở dòng 81 => kẻ tấn công lấy được các thông tin nhạy cảm nếu có thể access vào
 - Đề xuất: Hạn chế để thông tin nhạy cảm trong log hoặc mã hóa lại file log
+
 5. Không có xác thực người dùng: thiếu xác thực => ai sử dụng thiết bị cũng có thể sử dụng ứng dụng
 - Đề xuất: có thể thêm xác thực 2FA hoặc 1 password số trước khi làm gì đó
  */
