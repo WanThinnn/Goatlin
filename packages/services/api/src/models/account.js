@@ -1,4 +1,4 @@
-//Tệp này định nghĩa mô hình Note cho các tài liệu ghi chú trong MongoDB. Mô hình này được sử dụng để lưu trữ thông tin ghi chú của người dùng như id, chủ sở hữu, tiêu đề, nội dung và ngày tạo.
+//định nghĩa mô hình Account cho các tài liệu tài khoản trong MongoDB. Mô hình này được sử dụng để lưu trữ thông tin tài khoản người dùng như tên, email, mật khẩu và ngày tạo.
 
 const mongoose = require('mongoose'); // Yêu cầu thư viện Mongoose
 
@@ -14,8 +14,8 @@ const accountSchema = new mongoose.Schema({
         unique: true // Phải là duy nhất
     },
     password: {
-        type: String, 
-        required: true 
+        type: String, // Kiểu dữ liệu là chuỗi
+        required: true // Bắt buộc phải có
     },
     createdAt: {
         type: Date, // Kiểu dữ liệu là ngày tháng
