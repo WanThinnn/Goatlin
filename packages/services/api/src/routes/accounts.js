@@ -4,7 +4,9 @@ const Account = require('../models/account');
 const Note = require('../models/note');
 
 const router = express.Router();
-
+/* Đoạn này dùng để tạo tài khoản mới
+    Quy trình: req.body là dữ liệu của tài khoản mới cần tạo, Xác thực người dùng bằng middleware auth => lưu vào csdl và sẽ trả về thông báo tùy thuộc vào thành công hay không
+*/
 router.post('/accounts', async (req, res, next) => {
     try {
         const account = new Account(req.body);
@@ -25,7 +27,14 @@ router.post('/accounts', async (req, res, next) => {
         res.end();
     }
 });
-
+/*
+    Đoạn này để cập nhật hoặc tạo mới notes cho tài khoản
+    Quy trình:
+    - Lấy username và note từ URL params.
+    - Xác thực người dùng bằng middleware auth
+    - req.body là dữ liệu của note mới cần tạo hoặc cập nhật
+    - Tìm và cập nhật ghi chú dựa trên owner (username) và id (note ID)
+*/
 router.put('/accounts/:username/notes/:note', auth, async (req, res, next) => {
     const rawNote = {
         ...req.body,
@@ -52,7 +61,14 @@ router.put('/accounts/:username/notes/:note', auth, async (req, res, next) => {
         res.end()
     }
 });
-
+/*
+    Đoạn này dùng để lấy tất cả các ghi chú của một người dùng.
+    Quy trình:
+    - Lấy username từ URL params
+    - Xác thực người dùng bằng middleware auth
+    - Tìm tất cả các ghi chú dựa trên owner (username)
+    - Trả về thông báo thành công hoặc thất bại tùy thuộc vào kết quả tìm kiếm
+*/
 router.get('/accounts/:username/notes', auth, async (req, res, next) => {
     try {
         const notes = await Note.find({owner: req.params.username}, null,
