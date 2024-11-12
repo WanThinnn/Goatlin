@@ -8,9 +8,11 @@ import kotlinx.android.synthetic.main.activity_signup.*
 import android.widget.Toast
 import android.view.Gravity
 import android.widget.AutoCompleteTextView
+import android.widget.Button
 import com.cx.goatlin.api.model.Account
 import com.cx.goatlin.api.service.Client
 import com.cx.goatlin.helpers.DatabaseHelper
+import com.cx.goatlin.helpers.PreferenceHelper
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -30,7 +32,6 @@ Missing input validation
 - Đối với email, sử dụng các thư viện kiểm tra định dạng email chuẩn.
 
 */
-
 class SignupActivity : AppCompatActivity() {
     private val apiService by lazy {
         Client.create()
@@ -40,46 +41,62 @@ class SignupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
-        this.signup_button.setOnClickListener { attemptSignup() }
+        // Khởi tạo PreferenceHelper trước khi sử dụng
+        PreferenceHelper.init(applicationContext)
+        val signupButton: Button = findViewById(R.id.signup_button)
+        signupButton.setOnClickListener {
+            attemptSignup()
+        }
     }
 
     /**
      * Attempts to create a new account on back-end
      */
     private fun attemptSignup() {
+        Log.d("SignupActivity", "Signup attempt started") // Kiểm tra khi người dùng bấm đăng ký
         val name: String = this.name.text.toString()
         val email: String = this.email.text.toString()
         val password: String = this.password.text.toString()
         val confirmPassword: String = this.confirmPassword.text.toString()
 
+        // Kiểm tra mật khẩu xác nhận
         if (confirmPassword != password) {
             this.confirmPassword.error = "Passwords don't match"
             this.confirmPassword.requestFocus()
-            return;
+            return
         }
 
-        val account: Account = Account(name, email, password)
+        // Tạo tài khoản
+        val account = Account(name, email, password)
 
+        // Gửi yêu cầu tạo tài khoản tới server
         val call: Call<Void> = apiService.signup(account)
 
-        call.enqueue(object: Callback<Void> {
+        call.enqueue(object : Callback<Void> {
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Log.e("SingupActivity", t.message.toString())
+                Log.e("SignupActivity", t.message.toString())
+                showError("Failed to communicate with server")
             }
 
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 val emailField: AutoCompleteTextView = findViewById(R.id.email)
-                var message:String = ""
+                var message = ""
 
                 when (response.code()) {
                     201 -> {
-                        if (createLocalAccount(account)) {
-                            val intent = Intent(this@SignupActivity,
-                                    LoginActivity::class.java)
+                        // Kiểm tra kết quả tạo tài khoản trong CSDL cục bộ
+                        val localAccountCreationSuccess = createLocalAccount(account)
+                        if (localAccountCreationSuccess) {
+                            // Hiển thị thông báo thành công
+                            message = "Account created successfully!"
+                            showToast(message)
 
+                            // Chuyển sang màn hình đăng nhập
+                            val intent = Intent(this@SignupActivity, LoginActivity::class.java)
                             startActivity(intent)
                         } else {
                             message = "Failed to create local account"
+                            showError(message)
                         }
                     }
                     409 -> {
@@ -89,28 +106,126 @@ class SignupActivity : AppCompatActivity() {
                     }
                     else -> {
                         message = "Failed to create account"
+                        showError(message)
                     }
                 }
-
-                showError(message)
             }
         })
     }
 
-    /**
-     * Creates local account
-     */
     private fun createLocalAccount(account: Account): Boolean {
-        return DatabaseHelper(applicationContext).createAccount(account.email, account.password)
+        val dbHelper = DatabaseHelper(applicationContext)
+        return dbHelper.createAccount(account.email, account.password)
     }
 
     /**
-     * Shows a Toast with given message
+     * Shows a Toast with the given message
+     */
+    private fun showToast(message: String) {
+        Toast.makeText(this@SignupActivity, message, Toast.LENGTH_LONG).show()
+    }
+
+    /**
+     * Shows an error message with Toast
      */
     private fun showError(message: CharSequence) {
-        val toast: Toast = Toast.makeText(this@SignupActivity, message, Toast.LENGTH_LONG)
-
+        val toast = Toast.makeText(this@SignupActivity, message, Toast.LENGTH_LONG)
         toast.setGravity(Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL, 0, 0)
         toast.show()
     }
 }
+
+
+// Original -> dont delete
+//class SignupActivity : AppCompatActivity() {
+//    private val apiService by lazy {
+//        Client.create()
+//    }
+//
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        setContentView(R.layout.activity_signup)
+//
+//        // Gọi init() để khởi tạo PreferenceHelper trước khi sử dụng
+//        PreferenceHelper.init(applicationContext)
+//
+//        // Tiếp tục với phần còn lại của code
+//        val someValue = PreferenceHelper.getString("some_key", "default_value")
+//        val signupButton: Button = findViewById(R.id.signup_button)
+//                signupButton.setOnClickListener {
+//            attemptSignup()
+//        }
+//    }
+//
+//
+//    /**
+//     * Attempts to create a new account on back-end
+//     */
+//    private fun attemptSignup() {
+//        val name: String = this.name.text.toString()
+//        val email: String = this.email.text.toString()
+//        val password: String = this.password.text.toString()
+//        val confirmPassword: String = this.confirmPassword.text.toString()
+//
+//        if (confirmPassword != password) {
+//            this.confirmPassword.error = "Passwords don't match"
+//            this.confirmPassword.requestFocus()
+//            return;
+//        }
+//
+//        val account: Account = Account(name, email, password)
+//
+//        val call: Call<Void> = apiService.signup(account)
+//
+//        call.enqueue(object: Callback<Void> {
+//            override fun onFailure(call: Call<Void>, t: Throwable) {
+//                Log.e("SingupActivity", t.message.toString())
+//            }
+//
+//            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+//                val emailField: AutoCompleteTextView = findViewById(R.id.email)
+//                var message:String = ""
+//
+//                when (response.code()) {
+//                    201 -> {
+//                        if (createLocalAccount(account)) {
+//                            val intent = Intent(this@SignupActivity,
+//                                    LoginActivity::class.java)
+//
+//                            startActivity(intent)
+//                        } else {
+//                            message = "Failed to create local account"
+//                        }
+//                    }
+//                    409 -> {
+//                        message = "This account already exists"
+//                        emailField.error = message
+//                        emailField.requestFocus()
+//                    }
+//                    else -> {
+//                        message = "Failed to create account"
+//                    }
+//                }
+//
+//                showError(message)
+//            }
+//        })
+//    }
+//
+//    /**
+//     * Creates local account
+//     */
+//    private fun createLocalAccount(account: Account): Boolean {
+//        return DatabaseHelper(applicationContext).createAccount(account.email, account.password)
+//    }
+//
+//    /**
+//     * Shows a Toast with given message
+//     */
+//    private fun showError(message: CharSequence) {
+//        val toast: Toast = Toast.makeText(this@SignupActivity, message, Toast.LENGTH_LONG)
+//
+//        toast.setGravity(Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL, 0, 0)
+//        toast.show()
+//    }
+//}
