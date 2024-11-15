@@ -23,6 +23,9 @@
  */
 
 package com.cx.goatlin.helpers
+//AES-GCM-256, IV = 16byte, tag
+//SHA3-256 + salt + ....
+//Bcrypt => hashing password
 
 const val SHIFT = 3
 

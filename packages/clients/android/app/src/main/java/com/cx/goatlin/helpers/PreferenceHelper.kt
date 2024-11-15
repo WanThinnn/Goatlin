@@ -17,7 +17,7 @@ Lớp PreferenceHelper:
 - Khắc phục: Thay vì dựa vào init, có thể sử dụng lazy initialization để khởi tạo sharedPreferences ngay khi cần. Hoặc, kiểm tra và báo lỗi cụ thể nếu init chưa được gọi.
 
 
-2.3. Thiếu Hàm set (Đặt Giá Trị):
+2.3. Thiếu Hàm set (Đặt Giá Trị): => roi
 - Vấn đề: PreferenceHelper chỉ cung cấp phương thức để đọc giá trị mà không có phương thức để ghi giá trị (setString, setInt). Điều này có thể giới hạn khả năng lưu trữ dữ liệu của ứng dụng.
 - Khắc phục: Thêm các phương thức như setString, setInt để ghi dữ liệu vào SharedPreferences.
 
