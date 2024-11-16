@@ -25,7 +25,80 @@
 package com.cx.goatlin.helpers
 //AES-GCM-256, IV = 16byte, tag
 //SHA3-256 + salt + ....
-//Bcrypt => hashing password
+//Bcrypt => hashing password: Rồi
+
+//import thư viện của Bcrypt, đã thêm dependency vào gradle
+import at.favre.lib.crypto.bcrypt.BCrypt
+
+const val SHIFT = 3
+
+class CryptoHelper {
+    companion object {
+        fun encrypt(original: String): String {
+            var encrypted: String = ""
+
+            for (c in original) {
+                val ascii: Int = c.toInt()
+                val lowerBoundary: Int = if (c.isUpperCase()) 65 else 97
+
+                if (ascii in 65..90 || ascii in 97..122) {
+                    encrypted += ((ascii + SHIFT - lowerBoundary) % 26 + lowerBoundary).toChar()
+                } else {
+                    encrypted += c
+                }
+            }
+
+            return encrypted
+        }
+
+        fun decrypt(encrypted: String): String {
+            var original: String = ""
+
+            for (c in encrypted) {
+                val ascii: Int = c.toInt()
+                val lowerBoundary: Int = if (c.isUpperCase()) 65 else 97
+
+                if (ascii in 65..90 || ascii in 97..122) {
+                    original += ((ascii - SHIFT - lowerBoundary) % 26 + lowerBoundary).toChar()
+                } else {
+                    original += c
+                }
+            }
+
+            return original
+        }
+        /*
+THuật toán của Bcrypt:
+- Input:
+   - password: Mật khẩu (1-72 byte, mã hóa UTF-8).
+   - salt: Chuỗi ngẫu nhiên 16 byte.
+   - cost: Giá trị log2(số vòng lặp), ví dụ `12` tương ứng với (2^{12} = 4096) vòng lặp.
+- Khởi tạo trạng thái Blowfish:
+   - Tạo mảng khóa P (18 subkeys) và S-boxes (4 bảng thay thế, mỗi bảng 256 phần tử UInt32).
+   - Các giá trị ban đầu được lấy từ phần thập phân của số Pi.
+- Thiết lập EksBlowfishSetup:
+   - Trộn mật khẩu và salt vào các bảng P và S-boxes.
+   - Thực hiện các vòng lặp để trộn thêm mật khẩu và salt.
+- Mã hóa chuỗi cố định:
+   - Mã hóa chuỗi OrpheanBeholderScryDoubt (24 byte) 64 lần bằng Blowfish trong chế độ Electronic Codebook.
+- Output:
+   - Ghép nối cost, salt, và kết quả mã hóa (24 byte) để tạo hash.
+   - Hash thường có dạng: $2b$<cost>$<salt><hash>
+*/
+
+        //encrypt note by Bcrypt, cost = 12
+        fun encryptpw(original: String): String {
+            return BCrypt.withDefaults().hashToString(12, original.toCharArray())
+        }
+
+        //verify note by Bcrypt (Do Bcrypt không thể decrypt => mã hóa đầu vào bằng salt từ hashed của và so sánh với hashed)
+        fun verifypw(original: String, hashed: String): Boolean {
+            return BCrypt.verifyer().verify(original.toCharArray(), hashed).verified
+        }
+    }
+}
+/*
+package com.cx.goatlin.helpers
 
 const val SHIFT = 3
 
@@ -65,4 +138,4 @@ class CryptoHelper {
             return original
         }
     }
-}
+}*/
