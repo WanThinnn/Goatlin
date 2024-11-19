@@ -61,12 +61,13 @@ import com.cx.goatlin.models.Account
 import com.cx.goatlin.models.Note
 import java.io.File
 import java.io.FileOutputStream
+import at.favre.lib.crypto.bcrypt.BCrypt
 
 class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     private val preferences: SharedPreferences = context.getSharedPreferences(
-            "${context.packageName}.database_versions",
-            Context.MODE_PRIVATE
+        "${context.packageName}.database_versions",
+        Context.MODE_PRIVATE
     )
 
     private fun installedDatabaseIsOutdated(): Boolean {
@@ -105,28 +106,73 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
             writeDatabaseVersionInPreferences()
         }
     }
+    /*
+         public fun createAccount(username: String, password: String) : Boolean {
+             val db: SQLiteDatabase = this.writableDatabase
+             val record: ContentValues = ContentValues()
+             var status = true
 
-    public fun createAccount(username: String, password: String) : Boolean {
+             record.put("username", username)
+             record.put("password", password)
+
+             try {
+                 db.insertOrThrow(TABLE_ACCOUNTS, null, record)
+             }
+             catch (e: SQLException) {
+                 Log.e("Database signup", e.toString())
+                 status = false
+             }
+             finally {
+                 return status
+             }
+         }
+     */
+
+    public fun createAccount(username: String, password: String): Boolean {
         val db: SQLiteDatabase = this.writableDatabase
         val record: ContentValues = ContentValues()
         var status = true
 
         record.put("username", username)
-        record.put("password", password)
+
+        // Mã hóa mật khẩu trước khi lưu trữ
+        val hashedPassword = CryptoHelper.encryptpw(password)
+        record.put("password", hashedPassword)
 
         try {
             db.insertOrThrow(TABLE_ACCOUNTS, null, record)
-        }
-        catch (e: SQLException) {
+        } catch (e: SQLException) {
             Log.e("Database signup", e.toString())
             status = false
-        }
-        finally {
+        } finally {
             return status
         }
     }
 
-    public fun getAccount(username: String): Account {
+    /*
+       public fun getAccount(username: String): Account {
+           val db: SQLiteDatabase = this.readableDatabase
+           val columns: Array<String> = arrayOf("id", "username", "password")
+           val filter: String = "username = ?"
+           val filterValues: Array<String> = arrayOf(username)
+           val account: Account
+
+           val cursor: Cursor = db.query(false, TABLE_ACCOUNTS, columns, filter, filterValues,
+                   "","","","")
+
+           if (cursor.count != 1) {
+               throw Exception("Account not found")
+           }
+
+           cursor.moveToFirst()
+
+           account = Account(cursor)
+
+           return account
+       }
+      */
+
+    public fun getAccount(username: String, enteredPassword: String): Account {
         val db: SQLiteDatabase = this.readableDatabase
         val columns: Array<String> = arrayOf("id", "username", "password")
         val filter: String = "username = ?"
@@ -134,7 +180,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         val account: Account
 
         val cursor: Cursor = db.query(false, TABLE_ACCOUNTS, columns, filter, filterValues,
-                "","","","")
+            "","","","")
 
         if (cursor.count != 1) {
             throw Exception("Account not found")
@@ -142,16 +188,23 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 
         cursor.moveToFirst()
 
-        account = Account(cursor)
+        // Kiểm tra mật khẩu người dùng nhập vào có khớp với mật khẩu trong cơ sở dữ liệu không
+        val storedPassword = cursor.getString(cursor.getColumnIndex("password"))
+        if (!CryptoHelper.verifypw(enteredPassword, storedPassword)) {
+            throw Exception("Invalid password")
+        }
 
+        account = Account(cursor)
         return account
     }
+
+
 
     public fun listAccounts(): Cursor{
         val db: SQLiteDatabase = this.readableDatabase
         val columns: Array<String> = arrayOf("id AS _id", "username","password")
         return db.query(TABLE_ACCOUNTS, columns, null, null,
-                "","","","")
+            "","","","")
     }
 
     public fun addNote (note: Note): Boolean {
@@ -174,7 +227,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
             return status
         }
     }
-
+    */
     public fun updateNote (note: Note): Boolean {
         val db: SQLiteDatabase = this.writableDatabase
         val values: ContentValues = ContentValues()
@@ -185,7 +238,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 
 
         val count: Int = db.update(TABLE_NOTES, values, "id = ?",
-                arrayOf(note.id.toString()))
+            arrayOf(note.id.toString()))
 
         return count == 1
     }
@@ -197,7 +250,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         val filterValues: Array<String> = arrayOf(owner.toString())
 
         return db.query(false, TABLE_NOTES, columns, filter, filterValues,
-                "","","","")
+            "","","","")
     }
 
     public fun getNote(id: Int): Note {
@@ -208,7 +261,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         val note: Note
 
         val cursor: Cursor = db.query(false, TABLE_NOTES, columns, filter, filterValues,
-                "","","","")
+            "","","","")
 
         if (cursor.count != 1) {
             throw Exception("Note not found")
@@ -217,7 +270,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         cursor.moveToFirst()
 
         note = Note(CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("title"))),
-                CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("content"))))
+            CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("content"))))
         note.id = id
 
         return note
