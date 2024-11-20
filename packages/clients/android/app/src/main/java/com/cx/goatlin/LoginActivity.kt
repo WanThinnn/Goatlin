@@ -25,6 +25,7 @@ import android.support.v4.content.ContextCompat
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import com.cx.goatlin.helpers.CryptoHelper
 import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
 import com.cx.goatlin.models.Account
@@ -249,7 +250,7 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                 try {
                     val account: Account = DatabaseHelper(applicationContext).getAccount(mUsername)
 
-                    if (mPassword != account.password) {
+                    if (!CryptoHelper.verifypw(mPassword, account.password)) {
                         return false;
                     }
 

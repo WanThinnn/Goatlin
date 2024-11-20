@@ -34,7 +34,8 @@ package com.cx.goatlin.helpers
 import android.content.Context
 import android.content.SharedPreferences
 
-object PreferenceHelper {
+object
+PreferenceHelper {
     private lateinit var sharedPreferences: SharedPreferences
 
     fun init(context: Context) {

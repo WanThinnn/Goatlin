@@ -100,6 +100,7 @@ class HomeActivity : AppCompatActivity() {
      * Đề xuất: thực hiện sử dụng thuật toán bảo mật hơn và dùng phương thức https
      */
     private fun sync() {
+        val password: String = ""
         val username: String = PreferenceHelper.getString("userEmail", "")
         val account: Account = DatabaseHelper(applicationContext).getAccount(username)
         val basicAuth: String = Client.getBasicAuthorizationHeader(account.username, account.password)

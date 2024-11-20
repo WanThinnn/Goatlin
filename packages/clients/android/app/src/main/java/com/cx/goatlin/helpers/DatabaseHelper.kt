@@ -172,7 +172,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
        }
       */
 
-    public fun getAccount(username: String, enteredPassword: String): Account {
+    public fun getAccount(username: String): Account {
         val db: SQLiteDatabase = this.readableDatabase
         val columns: Array<String> = arrayOf("id", "username", "password")
         val filter: String = "username = ?"
@@ -190,9 +190,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 
         // Kiểm tra mật khẩu người dùng nhập vào có khớp với mật khẩu trong cơ sở dữ liệu không
         val storedPassword = cursor.getString(cursor.getColumnIndex("password"))
-        if (!CryptoHelper.verifypw(enteredPassword, storedPassword)) {
-            throw Exception("Invalid password")
-        }
+
 
         account = Account(cursor)
         return account
@@ -227,7 +225,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
             return status
         }
     }
-    */
+
     public fun updateNote (note: Note): Boolean {
         val db: SQLiteDatabase = this.writableDatabase
         val values: ContentValues = ContentValues()
