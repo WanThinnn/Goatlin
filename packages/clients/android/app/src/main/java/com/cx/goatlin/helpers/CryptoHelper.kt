@@ -18,17 +18,14 @@
 2.3. Tối ưu hiệu suất với StringBuilder:
 - Vấn đề: Khi tạo chuỗi encrypted và original, đoạn mã này sử dụng phép cộng +=, khiến hệ thống tạo ra nhiều đối tượng chuỗi mới (do String là bất biến trong Kotlin), làm ảnh hưởng đến hiệu suất.
 - Khắc phục: Thay vì +=, sử dụng StringBuilder để cải thiện hiệu suất khi thao tác với chuỗi trong vòng lặp.
-
-
  */
-
-package com.cx.goatlin.helpers
 //AES-GCM-256, IV = 16byte, tag
 //SHA3-256 + salt + ....
-//Bcrypt => hashing password: Rồi
+//Bcrypt => hashing password: Rồi (đổi thành argon2)
 
-//import thư viện của Bcrypt, đã thêm dependency vào gradle
-import at.favre.lib.crypto.bcrypt.BCrypt
+package com.cx.goatlin.helpers
+import de.mkammerer.argon2.Argon2
+import de.mkammerer.argon2.Argon2Factory
 
 const val SHIFT = 3
 
@@ -67,36 +64,35 @@ class CryptoHelper {
 
             return original
         }
-        /*
-THuật toán của Bcrypt:
-- Input:
-   - password: Mật khẩu (1-72 byte, mã hóa UTF-8).
-   - salt: Chuỗi ngẫu nhiên 16 byte.
-   - cost: Giá trị log2(số vòng lặp), ví dụ `12` tương ứng với (2^{12} = 4096) vòng lặp.
-- Khởi tạo trạng thái Blowfish:
-   - Tạo mảng khóa P (18 subkeys) và S-boxes (4 bảng thay thế, mỗi bảng 256 phần tử UInt32).
-   - Các giá trị ban đầu được lấy từ phần thập phân của số Pi.
-- Thiết lập EksBlowfishSetup:
-   - Trộn mật khẩu và salt vào các bảng P và S-boxes.
-   - Thực hiện các vòng lặp để trộn thêm mật khẩu và salt.
-- Mã hóa chuỗi cố định:
-   - Mã hóa chuỗi OrpheanBeholderScryDoubt (24 byte) 64 lần bằng Blowfish trong chế độ Electronic Codebook.
-- Output:
-   - Ghép nối cost, salt, và kết quả mã hóa (24 byte) để tạo hash.
-   - Hash thường có dạng: $2b$<cost>$<salt><hash>
-*/
 
-        //encrypt note by Bcrypt, cost = 12
+        //Argon2
+        private val argon2: Argon2 = Argon2Factory.create()
+
         fun encryptpw(original: String): String {
-            return BCrypt.withDefaults().hashToString(12, original.toCharArray())
+            // Chuyển đổi chuỗi thành char[] để tuân thủ phương thức mới
+            val passwordChars = original.toCharArray()
+            try {
+                // Sử dụng thời gian CPU 2, 65536 KB RAM, 1 thread
+                return argon2.hash(2, 65536, 1, passwordChars)
+            } finally {
+                // Xóa dữ liệu nhạy cảm khỏi bộ nhớ sau khi sử dụng
+                passwordChars.fill('\u0000')
+            }
         }
 
-        //verify note by Bcrypt (Do Bcrypt không thể decrypt => mã hóa đầu vào bằng salt từ hashed của và so sánh với hashed)
         fun verifypw(original: String, hashed: String): Boolean {
-            return BCrypt.verifyer().verify(original.toCharArray(), hashed).verified
+            // Chuyển đổi chuỗi gốc thành char[] để sử dụng phương thức verify mới
+            val passwordChars = original.toCharArray()
+            try {
+                return argon2.verify(hashed, passwordChars)
+            } finally {
+                // Xóa dữ liệu nhạy cảm khỏi bộ nhớ sau khi sử dụng
+                passwordChars.fill('\u0000')
+            }
         }
     }
 }
+
 /*
 package com.cx.goatlin.helpers
 
