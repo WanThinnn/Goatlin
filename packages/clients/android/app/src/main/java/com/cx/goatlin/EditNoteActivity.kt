@@ -105,9 +105,9 @@ class EditNoteActivity : AppCompatActivity() {
 
         if (note.id == -1) {
             // it's a new note
-            val owner = PreferenceHelper.getInt("userId", -1)
+            val owner = PreferenceHelper.getString("userId")
 
-            note.owner = owner
+            note.owner = owner.toInt()
 
             status = DatabaseHelper(applicationContext).addNote(note)
         } else {
