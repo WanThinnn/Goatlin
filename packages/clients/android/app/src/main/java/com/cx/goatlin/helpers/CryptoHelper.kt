@@ -21,11 +21,10 @@
  */
 //AES-GCM-256, IV = 16byte, tag
 //SHA3-256 + salt + ....
-//Bcrypt => hashing password: Rồi (đổi thành argon2)
+//Bcrypt => hashing password: Rồi
 
 package com.cx.goatlin.helpers
-import de.mkammerer.argon2.Argon2
-import de.mkammerer.argon2.Argon2Factory
+import at.favre.lib.crypto.bcrypt.BCrypt
 
 const val SHIFT = 3
 
@@ -65,30 +64,13 @@ class CryptoHelper {
             return original
         }
 
-        //Argon2
-        private val argon2: Argon2 = Argon2Factory.create()
-
+        //encrypt note by Bcrypt, cost = 12
         fun encryptpw(original: String): String {
-            // Chuyển đổi chuỗi thành char[] để tuân thủ phương thức mới
-            val passwordChars = original.toCharArray()
-            try {
-                // Sử dụng thời gian CPU 2, 65536 KB RAM, 1 thread
-                return argon2.hash(2, 65536, 1, passwordChars)
-            } finally {
-                // Xóa dữ liệu nhạy cảm khỏi bộ nhớ sau khi sử dụng
-                passwordChars.fill('\u0000')
-            }
+            return BCrypt.withDefaults().hashToString(12, original.toCharArray())
         }
-
+        //verify note by Bcrypt (Do Bcrypt không thể decrypt => mã hóa đầu vào bằng salt từ hashed của và so sánh với hashed)
         fun verifypw(original: String, hashed: String): Boolean {
-            // Chuyển đổi chuỗi gốc thành char[] để sử dụng phương thức verify mới
-            val passwordChars = original.toCharArray()
-            try {
-                return argon2.verify(hashed, passwordChars)
-            } finally {
-                // Xóa dữ liệu nhạy cảm khỏi bộ nhớ sau khi sử dụng
-                passwordChars.fill('\u0000')
-            }
+            return BCrypt.verifyer().verify(original.toCharArray(), hashed).verified
         }
     }
 }
