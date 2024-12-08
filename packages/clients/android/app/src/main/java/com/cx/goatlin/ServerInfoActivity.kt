@@ -6,7 +6,7 @@ import android.support.v7.app.AlertDialog.*
 import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import android.widget.EditText
-
+import com.cx.goatlin.helpers.PreferenceHelper
 /*
 Privacy Violation
 - Đoạn code lưu trữ thông tin địa chỉ IP và port trong SharedPreferences mà không có biện pháp bảo vệ.
@@ -41,11 +41,9 @@ class ServerInfoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_server_info)
-
-        val prefs = applicationContext.getSharedPreferences(applicationContext.packageName,
-                Context.MODE_PRIVATE)
-        this.serverIPAddress = prefs!!.getString("ip_address","127.0.0.1")
-        this.serverPort = prefs!!.getString("port","8080")
+        PreferenceHelper.init(applicationContext)
+        this.serverIPAddress = PreferenceHelper.getString(IP_ADDRESS, "127.0.0.1")
+        this.serverPort = PreferenceHelper.getString(PORT, "8080")
 
         findViewById<EditText>(R.id.IPAddress).setText(this.serverIPAddress)
         findViewById<EditText>(R.id.port).setText(this.serverPort)
@@ -63,12 +61,8 @@ class ServerInfoActivity : AppCompatActivity() {
                 this.displayAlert()
             }
             else {
-                val prefs = applicationContext.getSharedPreferences(applicationContext.packageName,
-                        Context.MODE_PRIVATE)
-                val editor = prefs!!.edit()
-                editor.putString(this.IP_ADDRESS,this.serverIPAddress)
-                editor.putString(this.PORT,this.serverPort)
-                editor.apply()
+                PreferenceHelper.setString("ip_address", this.serverIPAddress)
+                PreferenceHelper.setString("port", this.serverPort)
             }
 
 
