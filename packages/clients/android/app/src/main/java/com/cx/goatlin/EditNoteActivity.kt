@@ -33,6 +33,7 @@ import com.cx.goatlin.helpers.CryptoHelper
 import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
 import com.cx.goatlin.models.Note
+//import kotlin.coroutines.jvm.internal.CompletedContinuation.context
 
 class EditNoteActivity : AppCompatActivity() {
     lateinit var note: Note
@@ -118,7 +119,10 @@ class EditNoteActivity : AppCompatActivity() {
         } else {
             status = DatabaseHelper(applicationContext).updateNote(note)
         }
-
+        if (status) {
+            // Use 'this' or 'applicationContext' instead of 'context'
+            applicationContext.contentResolver.notifyChange(NotesProvider.CONTENT_URI, null)
+        }
         return status
     }
 

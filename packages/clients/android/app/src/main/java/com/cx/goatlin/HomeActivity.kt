@@ -76,7 +76,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
+        refreshNotes()
         val prefs = applicationContext.getSharedPreferences(
             applicationContext.packageName,
             Context.MODE_PRIVATE
@@ -116,7 +116,7 @@ class HomeActivity : AppCompatActivity() {
                 }
             } else {
                 Log.e("HomeActivity", "No notes found for user")
-                Toast.makeText(this, "No notes found", Toast.LENGTH_SHORT).show()
+
             }
         } catch (e: Exception) {
             Log.e("HomeActivity", "Error loading notes", e)
@@ -177,7 +177,22 @@ class HomeActivity : AppCompatActivity() {
             })
         }
     }
+    private fun refreshNotes() {
+        val owner = PreferenceHelper.getString("userId", "default_value")
+
+        if (owner != "default_value") {
+            try {
+                val cursor = DatabaseHelper(this).listNotes(owner.toInt())
+                if (cursor != null && cursor.count > 0) {
+                    (listView.adapter as? NoteCursorAdapter)?.changeCursor(cursor)
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Error refreshing notes: ${e.message}")
+            }
+        }
+    }
 }
+    // In HomeActivity.kt
 
 //old:
 //class NoteCursorAdapter(context: Context, layout: Int, cursor: Cursor, flags: Int) : ResourceCursorAdapter(context, layout, cursor, flags) {
