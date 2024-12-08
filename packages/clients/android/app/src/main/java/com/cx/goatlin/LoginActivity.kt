@@ -22,12 +22,14 @@ import android.content.pm.PackageManager
 import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import com.cx.goatlin.helpers.CryptoHelper
 import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
+import com.cx.goatlin.helpers.RootDetectionHelper
 import com.cx.goatlin.models.Account
 import kotlinx.android.synthetic.main.activity_login.*
 
@@ -51,6 +53,10 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         PreferenceHelper.init(applicationContext)
 
         setContentView(R.layout.activity_login)
+        /* Kiểm tra ROOT */
+//        if (RootDetectionHelper.isDeviceRooted(applicationContext)) {
+//            forceCloseApp()
+//        }
         // Set up the login form.
         populateAutoComplete()
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
@@ -98,7 +104,21 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         //Khắc phục: Dùng ViewModel và LiveData thay thế
 
     }
+    private fun forceCloseApp() {
+        val dialog: AlertDialog.Builder = AlertDialog.Builder(this)
 
+        dialog
+            .setMessage("The application can not run on rooted devices")
+            .setCancelable(false)
+            .setPositiveButton("Close Application", DialogInterface.OnClickListener {
+                    _, _ -> finish()
+            })
+
+        val alert: AlertDialog = dialog.create()
+
+        alert.setTitle("Unsafe Device")
+        alert.show()
+    }
     /**
      * Attempts to sign in the account specified by the login form.
      * If there are form errors (invalid email, missing fields, etc.), the errors are presented and
