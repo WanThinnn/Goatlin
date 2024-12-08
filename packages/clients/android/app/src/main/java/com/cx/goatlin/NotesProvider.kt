@@ -7,11 +7,13 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import com.cx.goatlin.helpers.DatabaseHelper
+import com.cx.goatlin.helpers.PreferenceHelper
 
 //Không mã hóa dữ liệu nhạy cảm: có thể dẫn đến việc bị lộ dữ liệu nếu lưu trữ mà không mã hóa trong SQLite.
 //Đề xuất chỉnh sửa: Sử dụng cơ chế mã hóa để lưu trữ dữ liệu trong SQLite. Có thể dùng các thư viện như SQLCipher để bảo vệ dữ liệu trong SQLite bằng mã hóa.
 
 class NotesProvider : ContentProvider() {
+
 
     private lateinit var database:DatabaseHelper
 
@@ -27,10 +29,13 @@ class NotesProvider : ContentProvider() {
         sURIMatcher.addURI(NotesProvider.AUTHORITY, NotesProvider.NOTES_TABLE, NOTES)
         sURIMatcher.addURI(NotesProvider.AUTHORITY, NotesProvider.NOTES_TABLE + "/#",
                 NOTES_ID)
+
     }
 
     override fun onCreate(): Boolean {
         this.database = DatabaseHelper(context)
+        PreferenceHelper.init(context.applicationContext)
+
         return true
     }
 
@@ -49,12 +54,13 @@ class NotesProvider : ContentProvider() {
             else -> throw IllegalArgumentException("Unknown URI")
         }
 
-        val cursor = queryBuilder.query(this.database.readableDatabase,
-                projection, selection, selectionArgs, null, null,
-                sortOrder)
-        cursor.setNotificationUri(context.contentResolver,
-                uri)
-        return cursor
+        val cursor = queryBuilder.query(this.database.readableDatabase, projection, selection, selectionArgs, null, null, sortOrder)
+        cursor.setNotificationUri(context.contentResolver, uri)
+        try {
+            return cursor
+        } finally {
+            cursor?.close()
+        }
 
         //Gọi cursor.setNotificationUri trong phương thức query mà không xử lý con trỏ đúng cách có thể dẫn đến lỗi rò rỉ bộ nhớ nếu không đóng con trỏ sau khi sử dụng.
         //Đề xuất chỉnh sửa: Đảm bảo con trỏ được đóng đúng cách khi không còn sử dụng để tránh rò rỉ bộ nhớ: "cursor?.close()"

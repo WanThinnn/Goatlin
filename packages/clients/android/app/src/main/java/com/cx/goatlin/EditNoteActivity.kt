@@ -40,6 +40,7 @@ class EditNoteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note_edit)
+        PreferenceHelper.init(applicationContext)
 
         initializeNote()
 
@@ -104,10 +105,14 @@ class EditNoteActivity : AppCompatActivity() {
         note.content = CryptoHelper.encrypt(findViewById<EditText>(R.id.content).text.toString())
 
         if (note.id == -1) {
-            // it's a new note
-            val owner = PreferenceHelper.getString("userId")
-
-            note.owner = owner.toInt()
+            val userId = PreferenceHelper.getString("userId")
+            Log.d("UserId", "UserId is: $userId")
+            if (userId.isNullOrEmpty()) {
+                showError("User ID is missing!")
+                return false
+            }
+            note.owner = userId.toInt()
+            Log.d("owner", note.owner.toString())
 
             status = DatabaseHelper(applicationContext).addNote(note)
         } else {

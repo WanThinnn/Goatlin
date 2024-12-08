@@ -88,6 +88,10 @@ class SignupActivity : AppCompatActivity() {
                         val localAccountCreationSuccess = createLocalAccount(account)
                         if (localAccountCreationSuccess) {
                             // Hiển thị thông báo thành công
+                            PreferenceHelper.setString("userId", account.email)
+
+                            val userId = PreferenceHelper.getString("userId")
+                            Log.d("UserId", "UserId is: $userId")
                             message = "Account created successfully!"
                             showToast(message)
 
