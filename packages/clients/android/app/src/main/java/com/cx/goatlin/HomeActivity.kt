@@ -51,7 +51,7 @@ class HomeActivity : AppCompatActivity() {
 
         try {
             val cursor: Cursor = DatabaseHelper(this).listNotes(owner.toInt())
-            if (cursor != null && cursor.count > 0) {
+            if (cursor.count > 0) {
                 cursor.moveToFirst()
                 do {
                     Log.d("HomeActivity", "Note: ${cursor.getString(cursor.getColumnIndex("title"))}")
@@ -73,37 +73,41 @@ class HomeActivity : AppCompatActivity() {
         }
 
     }
-
     override fun onResume() {
         super.onResume()
         refreshNotes()
-        val prefs = applicationContext.getSharedPreferences(
-            applicationContext.packageName,
-            Context.MODE_PRIVATE
-        )
-        val owner: Int = prefs.getInt("userId", -1)
-
+        val prefs = applicationContext.getSharedPreferences(applicationContext.packageName, Context.MODE_PRIVATE)
+//        val user_id: Int = prefs.getInt("userId", -1)
+        val user_name: String = PreferenceHelper.getString("userName")
+        val dbHelper = DatabaseHelper(applicationContext)
+        val owner = dbHelper.getAccount(user_name)
         Log.d("HomeActivity", "Owner ID: $owner")
 
-        if (owner == -1) {
+        if (owner.id == -1) {
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             finish()
             return
         }
 
-        // Thêm logging chi tiết
         try {
-            val notes: Cursor = DatabaseHelper(this).listNotes(owner)
-
+            val notes: Cursor = DatabaseHelper(this).listNotes(owner.id)
             Log.d("HomeActivity", "Notes cursor count: ${notes?.count ?: 0}")
 
             if (notes != null && notes.count > 0) {
                 notes.moveToFirst()
                 do {
+
                     val title = notes.getString(notes.getColumnIndex("title"))
-                    val content = notes.getString(notes.getColumnIndex("content"))
-                    //Log.d("HomeActivity", "Note - Title: $title, Content: $content")
+                    val encryptedContent = notes.getString(notes.getColumnIndex("content"))
+                    Log.d("HomeActivity", "Note - Title: $title, Content: $encryptedContent")
+
+                    // Giải mã nội dung ghi chú bằng khóa người dùng
+                    val decryptedContent = CryptoHelper.decrypt(encryptedContent, owner.username)
+
+                    // Log hoặc hiển thị nội dung đã giải mã
+                    Log.d("HomeActivity", "Decrypted Content: $decryptedContent")
+
                 } while (notes.moveToNext())
 
                 val adapter = NoteCursorAdapter(this, R.layout.activity_home_note_item, notes, 0)
@@ -116,12 +120,12 @@ class HomeActivity : AppCompatActivity() {
                 }
             } else {
                 Log.e("HomeActivity", "No notes found for user")
-
             }
         } catch (e: Exception) {
             Log.e("HomeActivity", "Error loading notes", e)
         }
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater: MenuInflater = menuInflater
@@ -149,34 +153,101 @@ class HomeActivity : AppCompatActivity() {
      * Đề xuất: thực hiện sử dụng thuật toán bảo mật hơn và dùng phương thức https
      */
     private fun sync() {
-        val password: String = ""
-        val username: String = PreferenceHelper.getString("userID", "")
-        val account: Account = DatabaseHelper(applicationContext).getAccount(username)
-        val basicAuth: String = Client.getBasicAuthorizationHeader(account.username, account.password)
-        val cursor: Cursor = DatabaseHelper(applicationContext).listNotes(account.id)
-        while (cursor.moveToNext()) {
-            val id: Int = cursor.getInt(cursor.getColumnIndex("_id"))
-            val title: String = cursor.getString(cursor.getColumnIndex("title"))
-            val content: String = cursor.getString(cursor.getColumnIndex("content"))
-            val createdAt: String = cursor.getString(cursor.getColumnIndex("createdAt"))
-            val note: Note = Note(title, content, createdAt)
+        try {
+            // Kiểm tra user đã đăng nhập
+            val username = PreferenceHelper.getString("userName", "")
+            if (username.isEmpty()) {
+                showError("Vui lòng đăng nhập để đồng bộ")
+                return
+            }
 
-            val call: Call<Void> = apiService.syncNote(basicAuth,username,id, note)
-            call.enqueue(object: Callback<Void> {
-                override fun onFailure(call: Call<Void>, t: Throwable) {
-                    Log.e("Sync", t.message.toString())
+            // Lấy thông tin tài khoản an toàn
+            val account = try {
+                DatabaseHelper(applicationContext).getAccount(username)
+            } catch (e: Exception) {
+                Log.e("Sync", "Lỗi lấy thông tin tài khoản: ${e.message}")
+                showError("Không thể lấy thông tin tài khoản")
+                return
+            }
+
+            // Mã hóa thông tin xác thực
+            val encryptedPassword = Client.getBasicAuthorizationHeader(account.username, account.password)
+
+            // Lấy danh sách ghi chú
+            val cursor = try {
+                DatabaseHelper(applicationContext).listNotes(account.id)
+            } catch (e: Exception) {
+                Log.e("Sync", "Lỗi lấy danh sách ghi chú: ${e.message}")
+                showError("Không thể lấy danh sách ghi chú")
+                return
+            }
+
+            // Đồng bộ từng ghi chú
+            var syncCount = 0
+            cursor.use { // Sử dụng use để tự động đóng cursor
+                while (cursor.moveToNext()) {
+                    val id = cursor.getInt(cursor.getColumnIndex("_id"))
+                    val title = cursor.getString(cursor.getColumnIndex("title"))
+                    val content = cursor.getString(cursor.getColumnIndex("content"))
+                    val createdAt = cursor.getString(cursor.getColumnIndex("createdAt"))
+
+                    val note = Note(title, content, createdAt)
+
+                    apiService.syncNote(encryptedPassword, username, id, note)
+                        .enqueue(object : Callback<Void> {
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                Log.e("Sync", "Lỗi đồng bộ ghi chú #$id: ${t.message}")
+                            }
+
+                            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                syncCount++
+                                Log.d("Sync", "Đồng bộ ghi chú #$id thành công")
+                                showOK("Đồng bộ ghi chú thành công")
+                            }
+                        })
                 }
-/*
-- Ở đây có thể xảy ra Security Logging and Monitoring Failures bởi vì nó có ghi lại thông tin ID  của note khi gặp lỗi
--> kẻ tấn công có thể lấy được thông tin nhạy cảm trong log
-- Đề xuất: Hạn chế để thông tin nhạy cảm trong log hoặc mã hóa lại file log
- */
-                override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                    Log.i("Sync", "Note #$id: ${response.code()}")
-                }
-            })
+            }
+        } catch (e: Exception) {
+            Log.e("Sync", "Lỗi đồng bộ: ${e.message}")
+            showError("Lỗi trong quá trình đồng bộ")
         }
     }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+    private fun showOK(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+//    private fun sync() {
+//        val password: String = ""
+//        val username: String = PreferenceHelper.getString("userID", "")
+//        val account: Account = DatabaseHelper(applicationContext).getAccount(username)
+//        val encryptedPassword: String = Client.getBasicAuthorizationHeader(account.username, account.password)
+//        val cursor: Cursor = DatabaseHelper(applicationContext).listNotes(account.id)
+//        while (cursor.moveToNext()) {
+//            val id: Int = cursor.getInt(cursor.getColumnIndex("_id"))
+//            val title: String = cursor.getString(cursor.getColumnIndex("title"))
+//            val content: String = cursor.getString(cursor.getColumnIndex("content"))
+//            val createdAt: String = cursor.getString(cursor.getColumnIndex("createdAt"))
+//            val note: Note = Note(title, content, createdAt)
+//
+//            val call: Call<Void> = apiService.syncNote(encryptedPassword,username,id, note)
+//            call.enqueue(object: Callback<Void> {
+//                override fun onFailure(call: Call<Void>, t: Throwable) {
+//                    Log.e("Sync", t.message.toString())
+//                }
+//            /*
+//            - Ở đây có thể xảy ra Security Logging and Monitoring Failures bởi vì nó có ghi lại thông tin ID  của note khi gặp lỗi
+//            -> kẻ tấn công có thể lấy được thông tin nhạy cảm trong log
+//            - Đề xuất: Hạn chế để thông tin nhạy cảm trong log hoặc mã hóa lại file log
+//             */
+//                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+//                    Log.i("Sync", "Note #$id: ${response.code()}")
+//                }
+//            })
+//        }
+//    }
     private fun refreshNotes() {
         val owner = PreferenceHelper.getString("userId", "default_value")
 
@@ -212,7 +283,23 @@ class NoteCursorAdapter(context: Context, layout: Int, cursor: Cursor, flags: In
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
         val title = view.findViewById<TextView>(R.id.title)
-        // Giải mã tiêu đề trước khi hiển thị (nếu cần)
-        title.text = CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("title")))
+
+        // Lấy username từ SharedPreferences (hoặc nguồn lưu trữ khác)
+        val username = PreferenceHelper.getString("userName")
+        if (username.isEmpty()) {
+            // Xử lý lỗi nếu username không tồn tại
+            title.text = "Unknown User"
+            return
+        }
+
+        // Giải mã tiêu đề trước khi hiển thị
+        val encryptedTitle = cursor.getString(cursor.getColumnIndex("title"))
+        try {
+            title.text = CryptoHelper.decrypt(encryptedTitle, username)
+        } catch (e: Exception) {
+            // Xử lý lỗi khi giải mã
+            e.printStackTrace()
+            title.text = "Error decrypting title"
+        }
     }
 }

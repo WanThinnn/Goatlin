@@ -240,28 +240,73 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 
     }
 
+    // public fun getNote(id: Int): Note {
+    //     val db: SQLiteDatabase = this.readableDatabase
+    //     val columns: Array<String> = arrayOf("title", "content")
+    //     val filter: String = "id = ?"
+    //     val filterValues: Array<String> = arrayOf(id.toString())
+    //     val note: Note
+
+    //     val cursor: Cursor = db.query(false, TABLE_NOTES, columns, filter, filterValues,
+    //         "", "", "", "")
+
+    //     if (cursor.count != 1) {
+    //         throw Exception("Note not found")
+    //     }
+
+    //     cursor.moveToFirst()
+
+    //     // Lấy username từ SharedPreferences (hoặc nguồn lưu trữ khác)
+    //     val username = PreferenceHelper.getString("username")
+    //     if (username.isNullOrEmpty()) {
+    //         // Xử lý lỗi nếu không có username
+    //         throw Exception("Username is missing")
+    //     }
+
+    //     // Giải mã tiêu đề và nội dung trước khi tạo note
+    //     val decryptedTitle = CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("title")), username)
+    //     val decryptedContent = CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("content")), username)
+
+    //     note = Note(decryptedTitle, decryptedContent)
+    //     note.id = id
+
+    //     return note
+    // }
+
     public fun getNote(id: Int): Note {
-        val db: SQLiteDatabase = this.readableDatabase
-        val columns: Array<String> = arrayOf("title", "content")
-        val filter: String = "id = ?"
-        val filterValues: Array<String> = arrayOf(id.toString())
-        val note: Note
+    val db: SQLiteDatabase = this.readableDatabase
+    val columns: Array<String> = arrayOf("id", "title", "content", "owner") // Thêm các cột cần thiết
+    val filter: String = "id = ?"
+    val filterValues: Array<String> = arrayOf(id.toString())
 
+    try {
         val cursor: Cursor = db.query(false, TABLE_NOTES, columns, filter, filterValues,
-            "","","","")
+            "", "", "", "")
 
-        if (cursor.count != 1) {
+        if (cursor.moveToFirst()) {
+            // Lấy username từ PreferenceHelper
+            val username = PreferenceHelper.getString("userName", "") // Đổi "username" thành "userName" cho đồng nhất
+            if (username.isEmpty()) {
+                throw Exception("Username not found")
+            }
+
+            val title = cursor.getString(cursor.getColumnIndex("title"))
+            val content = cursor.getString(cursor.getColumnIndex("content"))
+            
+            val note = Note(title, content)
+            note.id = cursor.getInt(cursor.getColumnIndex("id"))
+            note.owner = cursor.getInt(cursor.getColumnIndex("owner"))
+            
+            cursor.close()
+            return note
+        } else {
             throw Exception("Note not found")
         }
-
-        cursor.moveToFirst()
-
-        note = Note(CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("title"))),
-            CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("content"))))
-        note.id = id
-
-        return note
+    } catch (e: Exception) {
+        Log.e("DatabaseHelper", "Error getting note: ${e.message}")
+        throw e
     }
+}
 
     override fun getWritableDatabase(): SQLiteDatabase {
         // throw RuntimeException("The $DATABASE_NAME database is not writable.")

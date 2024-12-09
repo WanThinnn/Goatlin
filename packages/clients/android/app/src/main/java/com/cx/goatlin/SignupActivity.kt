@@ -54,7 +54,7 @@ class SignupActivity : AppCompatActivity() {
      */
     private fun attemptSignup() {
         Log.d("SignupActivity", "Signup attempt started") // Kiểm tra khi người dùng bấm đăng ký
-        val fullname: String = this.name.text.toString()
+        val name: String = this.name.text.toString()
         val email: String = this.email.text.toString()
         val password: String = this.password.text.toString()
         val confirmPassword: String = this.confirmPassword.text.toString()
@@ -67,7 +67,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         // Tạo tài khoản
-        val account = Account(fullname, email, password)
+        val account = Account(name, email, password)
 
         // Gửi yêu cầu tạo tài khoản tới server
         val call: Call<Void> = apiService.signup(account)
@@ -90,10 +90,16 @@ class SignupActivity : AppCompatActivity() {
 
                             // Check UserID từ CSDL
                             val dbHelper = DatabaseHelper(applicationContext)
-                            val account_id = dbHelper.getAccount(account.email).id
+                            val new_account = dbHelper.getAccount(account.email)
+                            val account_id = new_account.id
+                            val account_email = new_account.username
                             PreferenceHelper.setString("userId", account_id.toString())
+                            PreferenceHelper.setString("userName", account_email)
                             val userId = PreferenceHelper.getString("userId")
-                            Log.d("UserId", "UserId is: $userId")
+                            val userName = PreferenceHelper.getString("userName")
+
+                            Log.d("HomeActivity", "UserId is: $userId")
+                            Log.d("HomeActivity", "UserName is: $userName")
 
                             // Hiển thị thông báo thành công
                             message = "Account created successfully!"

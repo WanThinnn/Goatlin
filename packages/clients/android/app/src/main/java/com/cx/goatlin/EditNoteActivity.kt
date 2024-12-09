@@ -34,7 +34,7 @@ import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
 import com.cx.goatlin.models.Note
 //import kotlin.coroutines.jvm.internal.CompletedContinuation.context
-
+import com.cx.goatlin.helpers.*
 class EditNoteActivity : AppCompatActivity() {
     lateinit var note: Note
 
@@ -79,21 +79,36 @@ class EditNoteActivity : AppCompatActivity() {
      * Initializes internal "note" property with a new Note or one from database depending on
      * whether intent string extra "NOTE_ID" is defined
      */
+    // Trong EditNoteActivity.kt
     private fun initializeNote() {
-        val noteId: String? = intent.getStringExtra("NOTE_ID")
+    val noteId: String? = intent.getStringExtra("NOTE_ID")
+    val username = PreferenceHelper.getString("userName", "") // Đổi "username" thành "userName"
 
-        if (noteId != null) {
-            try {
-                note = DatabaseHelper(applicationContext).getNote(noteId.toInt())
+    if (noteId != null) {
+        try {
+            note = DatabaseHelper(applicationContext).getNote(noteId.toInt())
+            
+            // Giải mã nội dung
+            if (username.isNotEmpty()) {
+                try {
+                    // Note đã được lấy từ DB, giải mã để hiển thị
+                    note.title = CryptoHelper.decrypt(note.title, username)
+                    note.content = CryptoHelper.decrypt(note.content, username)
+                    
+                    Log.d("EditNoteActivity", "Giải mã thành công - Title: ${note.title}")
+                } catch (e: Exception) {
+                    Log.e("EditNoteActivity", "Lỗi giải mã: ${e.message}")
+                    showError("Không thể giải mã nội dung")
+                }
             }
-            catch (e: Exception) {
-                Log.e("EditNoteActivity", e.toString())
-                note = Note("", "")
-            }
-        } else {
+        } catch (e: Exception) {
+            Log.e("EditNoteActivity", "Lỗi lấy note: ${e.message}")
             note = Note("", "")
         }
+    } else {
+        note = Note("", "")
     }
+}
 
     /**
      * Saves internal note property to database
@@ -101,14 +116,29 @@ class EditNoteActivity : AppCompatActivity() {
     private fun saveNote(): Boolean {
         var status: Boolean
 
-        // update note
-        note.title = CryptoHelper.encrypt(findViewById<EditText>(R.id.title).text.toString())
-        note.content = CryptoHelper.encrypt(findViewById<EditText>(R.id.content).text.toString())
+        // Lấy username từ Preferences (hoặc từ nơi khác bạn lưu trữ thông tin đăng nhập)
+        val username = PreferenceHelper.getString("userName")
+        CryptoHelper.createUserKey(username)
+        if (username.isEmpty()) {
+            showError("Username is missing!")
+            return false
+        }
 
+        // Mã hóa tiêu đề và nội dung với username
+        note.title = CryptoHelper.encrypt(
+            findViewById<EditText>(R.id.title).text.toString(),
+            username
+        )
+        note.content = CryptoHelper.encrypt(
+            findViewById<EditText>(R.id.content).text.toString(),
+            username
+        )
+
+        // Kiểm tra nếu đây là ghi chú mới hoặc ghi chú cần cập nhật
         if (note.id == -1) {
             val userId = PreferenceHelper.getString("userId")
-            Log.d("UserId", "UserId is: $userId")
-            if (userId.isNullOrEmpty()) {
+            Log.d("EditnoteActivity", "UserId is: $userId")
+            if (userId.isEmpty()) {
                 showError("User ID is missing!")
                 return false
             }
@@ -119,12 +149,14 @@ class EditNoteActivity : AppCompatActivity() {
         } else {
             status = DatabaseHelper(applicationContext).updateNote(note)
         }
+
         if (status) {
-            // Use 'this' or 'applicationContext' instead of 'context'
+            // Notify content resolver để cập nhật giao diện
             applicationContext.contentResolver.notifyChange(NotesProvider.CONTENT_URI, null)
         }
         return status
     }
+
 
     /**
      * Show a Toast with given error message
