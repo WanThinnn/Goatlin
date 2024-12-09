@@ -29,6 +29,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import at.favre.lib.crypto.bcrypt.LongPasswordStrategies
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -135,12 +136,12 @@ class CryptoHelper {
 
         // Mã hóa mật khẩu bằng Bcrypt
         fun encryptpw(original: String): String {
-            return BCrypt.withDefaults().hashToString(12, original.toCharArray())
+            return BCrypt.with(LongPasswordStrategies.hashSha512(BCrypt.Version.VERSION_2A)).hashToString(6, original.toCharArray()); //allows to honour all pw bytes
         }
 
         // Kiểm tra mật khẩu với Bcrypt
-        fun verifypw(original: String, hashed: String): Boolean {
-            return BCrypt.verifyer().verify(original.toCharArray(), hashed).verified
+        fun verifypw(password: String, hashed: String): Boolean {
+            return BCrypt.verifyer().verify(password.toCharArray(), hashed).verified
         }
     }
 }
