@@ -13,6 +13,9 @@ import com.cx.goatlin.api.model.Account
 import com.cx.goatlin.api.service.Client
 import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
+import com.cx.goatlin.helpers.PasswordHelper
+
+
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -58,6 +61,19 @@ class SignupActivity : AppCompatActivity() {
         val email: String = this.email.text.toString()
         val password: String = this.password.text.toString()
         val confirmPassword: String = this.confirmPassword.text.toString()
+
+
+        // test password strength
+        if (!PasswordHelper.strength(password)) {
+            this.password.error = """|Weak password. Please use:
+                                  |* both upper and lower case letters
+                                  |* numbers
+                                  |* special characters (e.g. !"#$%&')
+                                  |* from 10 to 128 characters sequence""".trimMargin()
+            this.password.requestFocus()
+            return;
+        }
+
 
         // Kiểm tra mật khẩu xác nhận
         if (confirmPassword != password) {
