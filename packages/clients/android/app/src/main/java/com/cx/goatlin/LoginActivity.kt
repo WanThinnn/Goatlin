@@ -263,10 +263,10 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         // Khắc phục: Dùng ExecutorService hoặc WorkManager để quản lý các tác vu bất đồng bộ một cách hiệu quả hơn.
 
         override fun doInBackground(vararg params: Void): Boolean? {
-            if ((mUsername == "Supervisor") and (mPassword == "MySuperSecretPassword123!")){
-                return true
-            }
-            else {
+//            if ((mUsername == "Supervisor") and (mPassword == "MySuperSecretPassword123!")){
+//                return true
+//            }
+//            else {
                 try {
                     val account: Account = DatabaseHelper(applicationContext).getAccount(mUsername)
 
@@ -285,7 +285,7 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                 } catch(e: Exception){
                     return false
                 }
-            }
+//            }
         }
 
         override fun onPostExecute(success: Boolean?) {
