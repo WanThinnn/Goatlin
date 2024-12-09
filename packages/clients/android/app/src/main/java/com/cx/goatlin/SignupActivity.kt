@@ -54,7 +54,7 @@ class SignupActivity : AppCompatActivity() {
      */
     private fun attemptSignup() {
         Log.d("SignupActivity", "Signup attempt started") // Kiểm tra khi người dùng bấm đăng ký
-        val name: String = this.name.text.toString()
+        val fullname: String = this.name.text.toString()
         val email: String = this.email.text.toString()
         val password: String = this.password.text.toString()
         val confirmPassword: String = this.confirmPassword.text.toString()
@@ -67,7 +67,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         // Tạo tài khoản
-        val account = Account(name, email, password)
+        val account = Account(fullname, email, password)
 
         // Gửi yêu cầu tạo tài khoản tới server
         val call: Call<Void> = apiService.signup(account)
@@ -123,7 +123,7 @@ class SignupActivity : AppCompatActivity() {
 
     private fun createLocalAccount(account: Account): Boolean {
         val dbHelper = DatabaseHelper(applicationContext)
-        return dbHelper.createAccount(account.email, account.password)
+        return dbHelper.createAccount(account.name, account.email, account.password)
     }
 
     /**
