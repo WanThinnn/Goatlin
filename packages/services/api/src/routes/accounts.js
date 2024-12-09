@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const ownership = require('../middleware/ownership');
 const Account = require('../models/account');
 const Note = require('../models/note');
 
@@ -35,7 +36,7 @@ router.post('/accounts', async (req, res, next) => {
     - req.body là dữ liệu của note mới cần tạo hoặc cập nhật
     - Tìm và cập nhật ghi chú dựa trên owner (username) và id (note ID)
 */
-router.put('/accounts/:username/notes/:note', auth, async (req, res, next) => {
+router.put('/accounts/:username/notes/:note', [auth, ownership], async (req, res, next) => {
     const rawNote = {
         ...req.body,
         id: req.params.note,
@@ -69,7 +70,7 @@ router.put('/accounts/:username/notes/:note', auth, async (req, res, next) => {
     - Tìm tất cả các ghi chú dựa trên owner (username)
     - Trả về thông báo thành công hoặc thất bại tùy thuộc vào kết quả tìm kiếm
 */
-router.get('/accounts/:username/notes', auth, async (req, res, next) => {
+router.get('/accounts/:username/notes', [auth, ownership], async (req, res, next) => {
     try {
         const notes = await Note.find({owner: req.params.username}, null,
             {lean: true}).exec();

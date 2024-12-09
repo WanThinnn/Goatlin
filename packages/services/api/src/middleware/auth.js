@@ -55,6 +55,8 @@ module.exports = async function (req, res, next) {
             return res.status(401).end()
         }
 
+        req.account = {username: email}
+
         return next();
     } catch (e) {
         let status = 500;
