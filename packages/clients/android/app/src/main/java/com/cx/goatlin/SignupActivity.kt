@@ -87,11 +87,15 @@ class SignupActivity : AppCompatActivity() {
                         // Kiểm tra kết quả tạo tài khoản trong CSDL cục bộ
                         val localAccountCreationSuccess = createLocalAccount(account)
                         if (localAccountCreationSuccess) {
-                            // Hiển thị thông báo thành công
-                            PreferenceHelper.setString("userId", account.email)
 
+                            // Check UserID từ CSDL
+                            val dbHelper = DatabaseHelper(applicationContext)
+                            val account_id = dbHelper.getAccount(account.email).id
+                            PreferenceHelper.setString("userId", account_id.toString())
                             val userId = PreferenceHelper.getString("userId")
                             Log.d("UserId", "UserId is: $userId")
+
+                            // Hiển thị thông báo thành công
                             message = "Account created successfully!"
                             showToast(message)
 
