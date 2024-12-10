@@ -177,9 +177,29 @@ class HomeActivity : AppCompatActivity() {
                 sync()
                 true
             }
-
+            
+            R.id.logout -> {
+                // Thực hiện chức năng Logout
+                performLogout()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    // Hàm xử lý Logout
+    private fun performLogout() {
+        // Xóa dữ liệu người dùng (nếu có) và chuyển hướng về màn hình đăng nhập
+        val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+        sharedPref.edit().clear().apply()
+
+        // Chuyển sang màn hình Login
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+
+        // Hiển thị thông báo hoặc đóng Activity hiện tại
+        finish()
     }
 
     /*
