@@ -35,6 +35,8 @@ import android.util.Base64
 import com.cx.goatlin.api.model.Account
 import com.cx.goatlin.api.model.Note
 import com.cx.goatlin.helpers.PreferenceHelper
+import okhttp3.CertificatePinner
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -59,15 +61,20 @@ interface Client {
         }
 
         fun create(): Client {
-            val hostname: String = PreferenceHelper.getString("ip_address", "127.0.0.1")
-            val port: String = PreferenceHelper.getString("port", "8080")
-            val baseUrl: String = "http://${hostname}:${port}"
+            val certificatePinner = CertificatePinner.Builder()
+                .add("goatlinapp.id.vn:8443", "sha256/DLWMRNpw7oVgjZM40yQNLF6lx14FxqeH2z+gzXevsi8=")
+                .build()
+
+            val client: OkHttpClient = OkHttpClient.Builder()
+                .certificatePinner(certificatePinner)
+                .build()
 
             val retrofit = Retrofit.Builder()
-                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .baseUrl(baseUrl)
-                    .build()
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
+                .baseUrl("https://goatlinapp.id.vn:8443")
+                .client(client)
+                .build()
 
             return retrofit.create(Client::class.java)
         }
