@@ -20,6 +20,7 @@ thể dẫn đến các hành vi không mong muốn
  */
 
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -59,21 +60,14 @@ class EditNoteActivity : AppCompatActivity() {
         // Handle item selection
         return when (item.itemId) {
             R.id.save -> {
-                val saved: Boolean = saveNote()
+                showSaveConfirmation()
 
-                if (saved == false) {
-                    showError("Could not save!")
-                }
-
-                // val intent = Intent(this, HomeActivity::class.java)
-                // startActivity(intent)
-                finish()
 
                 true
             }
-             R.id.delete -> {
-            showDeleteConfirmation()
-            true
+            R.id.delete -> {
+                showDeleteConfirmation()
+                true
             }
             else -> super.onOptionsItemSelected(item)
         }
@@ -88,7 +82,23 @@ class EditNoteActivity : AppCompatActivity() {
         }
         .setNegativeButton("Cancel", null)
         .show()
-}
+    }
+
+    private fun showSaveConfirmation() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Save Note")
+            .setMessage("Are you sure you want to save this note?")
+            .setPositiveButton("Save") { _, _ ->
+                val saved: Boolean = saveNote()
+                if (saved == false) {
+                    showError("Could not save!")
+                }
+
+                finish()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
 
     /**
      * Initializes internal "note" property with a new Note or one from database depending on
@@ -178,18 +188,18 @@ class EditNoteActivity : AppCompatActivity() {
 
     private fun deleteNote() {
 
-    if (note.id != -1) {
-        val deleted = DatabaseHelper(applicationContext).deleteNote(note.id)
-        if (deleted) {
-            // Notify content resolver to update UI
-            applicationContext.contentResolver.notifyChange(NotesProvider.CONTENT_URI, null)
-            finish()
+        if (note.id != -1) {
+            val deleted = DatabaseHelper(applicationContext).deleteNote(note.id)
+            if (deleted) {
+                // Notify content resolver to update UI
+                applicationContext.contentResolver.notifyChange(NotesProvider.CONTENT_URI, null)
+                finish()
 
-        } else {
-            showError("Could not delete note!")
+            } else {
+                showError("Could not delete note!")
+            }
         }
     }
-}
     /**
      * Show a Toast with given error message
      *
