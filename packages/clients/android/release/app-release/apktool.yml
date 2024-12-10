@@ -1,0 +1,26 @@
+version: 2.10.0
+apkFileName: app-release.apk
+isFrameworkApk: false
+usesFramework:
+  ids:
+  - 1
+  tag: null
+sdkInfo:
+  minSdkVersion: 26
+  targetSdkVersion: 26
+packageInfo:
+  forcedPackageId: 127
+  renameManifestPackage: null
+versionInfo:
+  versionCode: 1
+  versionName: 1.0
+resourcesAreCompressed: false
+sharedLibrary: false
+sparseResources: false
+unknownFiles:
+  kotlin-tooling-metadata.json: 8
+  publicsuffixes.gz: 8
+doNotCompress:
+- resources.arsc
+- png
+- webp
