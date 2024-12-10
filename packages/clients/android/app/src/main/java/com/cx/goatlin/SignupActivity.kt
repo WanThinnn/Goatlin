@@ -77,7 +77,7 @@ class SignupActivity : AppCompatActivity() {
             this.email.requestFocus()
             return
         }
-         test password strength
+        // test password strength
         if (!PasswordHelper.strength(password)) {
             this.password.error = """|Weak password. Please use:
                                   |* both upper and lower case letters
