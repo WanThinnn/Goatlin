@@ -14,7 +14,7 @@ import com.cx.goatlin.api.service.Client
 import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
 import com.cx.goatlin.helpers.PasswordHelper
-
+import com.cx.goatlin.helpers.CheckStringHelper
 
 import retrofit2.Call
 import retrofit2.Callback
@@ -57,22 +57,36 @@ class SignupActivity : AppCompatActivity() {
      */
     private fun attemptSignup() {
         Log.d("SignupActivity", "Signup attempt started") // Kiểm tra khi người dùng bấm đăng ký
-        val name: String = this.name.text.toString()
-        val email: String = this.email.text.toString().lowercase()
+        var name: String = this.name.text.toString()
+        val username: String = this.email.text.toString().lowercase()
         val password: String = this.password.text.toString()
         val confirmPassword: String = this.confirmPassword.text.toString()
 
-
-        // test password strength
-        if (!PasswordHelper.strength(password)) {
-            this.password.error = """|Weak password. Please use:
-                                  |* both upper and lower case letters
-                                  |* numbers
-                                  |* special characters (e.g. !"#$%&')
-                                  |* from 10 to 128 characters sequence""".trimMargin()
-            this.password.requestFocus()
-            return;
+        // Kiểm tra và chuẩn hóa tên
+        if (!CheckStringHelper.validateName(name)) {
+            this.name.error = "Invalid name. Only letters and one space between words allowed."
+            this.name.requestFocus()
+            return
         }
+        else{
+            name = CheckStringHelper.capitalizeFirstLetter(name)
+        }
+
+        if (!CheckStringHelper.validateNoWhitespaceOrDash(username)){
+            this.email.error = "Invalid username. No whitespace or '-' allowed."
+            this.email.requestFocus()
+            return
+        }
+        // test password strength
+//        if (!PasswordHelper.strength(password)) {
+//            this.password.error = """|Weak password. Please use:
+//                                  |* both upper and lower case letters
+//                                  |* numbers
+//                                  |* special characters (e.g. !"#$%&')
+//                                  |* from 10 to 128 characters sequence""".trimMargin()
+//            this.password.requestFocus()
+//            return;
+//        }
 
 
         // Kiểm tra mật khẩu xác nhận
@@ -83,7 +97,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         // Tạo tài khoản
-        val account = Account(name, email, password)
+        val account = Account(name, username, password)
 
         // Gửi yêu cầu tạo tài khoản tới server
         val call: Call<Void> = apiService.signup(account)
