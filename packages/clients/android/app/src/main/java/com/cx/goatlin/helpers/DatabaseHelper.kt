@@ -161,10 +161,11 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 
 
     public fun getAccount(username: String): Account {
+
         val db: SQLiteDatabase = this.readableDatabase
         val columns: Array<String> = arrayOf("id", "name","username", "password")
         val filter: String = "username = ?"
-        val filterValues: Array<String> = arrayOf(username)
+        val filterValues: Array<String> = arrayOf(username.lowercase())
         val account: Account
 
         val cursor: Cursor = db.query(false, TABLE_ACCOUNTS, columns, filter, filterValues,

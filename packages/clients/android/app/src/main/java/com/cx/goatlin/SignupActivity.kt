@@ -58,7 +58,7 @@ class SignupActivity : AppCompatActivity() {
     private fun attemptSignup() {
         Log.d("SignupActivity", "Signup attempt started") // Kiểm tra khi người dùng bấm đăng ký
         val name: String = this.name.text.toString()
-        val email: String = this.email.text.toString()
+        val email: String = this.email.text.toString().lowercase()
         val password: String = this.password.text.toString()
         val confirmPassword: String = this.confirmPassword.text.toString()
 
