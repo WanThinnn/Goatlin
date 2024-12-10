@@ -180,17 +180,33 @@ class HomeActivity : AppCompatActivity() {
             
             R.id.logout -> {
                 // Thực hiện chức năng Logout
-                performLogout()
+                showLogoutConfirmation()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
-
+    private fun showLogoutConfirmation() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Log out")
+            .setMessage("Are you sure you want to log out?")
+            .setPositiveButton("Log out") { _, _ ->
+                performLogout()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
     // Hàm xử lý Logout
     private fun performLogout() {
         // Xóa dữ liệu người dùng (nếu có) và chuyển hướng về màn hình đăng nhập
         val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
+        // In tất cả các giá trị trong SharedPreferences
+        val allPrefs = sharedPref.all  // Trả về một Map<String, *>
+
+        // In các giá trị của session ra Log
+        for ((key, value) in allPrefs) {
+            Log.d("UserSession", "$key: $value")
+        }
         sharedPref.edit().clear().apply()
 
         // Chuyển sang màn hình Login
@@ -202,15 +218,7 @@ class HomeActivity : AppCompatActivity() {
         finish()
     }
 
-    /*
-     * Sends authenticate user local notes to the back-end server
-     * Có thể xảy ra Cryptography Failure và Broken Access Control ở đây bởi vì hàm getBasicAuthorizationHeader
-     chỉ sử dụng base64 để encode và decode, ngoài ra hàm này dùng http thay vì https nên có thể xảy ra kẻ tấn công
-     chặn yêu cầu không mã hóa và lấy được thông tin xác thực Base64 từ header Authorization, từ đó có thể sử dụng
-     để truy cập vào các tài khoản khác
 
-     * Đề xuất: thực hiện sử dụng thuật toán bảo mật hơn và dùng phương thức https
-     */
     private fun sync() {
         try {
             // Kiểm tra user đã đăng nhập
@@ -262,7 +270,7 @@ class HomeActivity : AppCompatActivity() {
                             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                                 syncCount++
                                 Log.d("Sync", "Đồng bộ ghi chú #$id thành công")
-                                showOK("Đồng bộ ghi chú thành công")
+                                showOK("Notes synced successfully")
                             }
                         })
                 }
