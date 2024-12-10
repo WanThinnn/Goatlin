@@ -81,22 +81,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         }
     }
 
-    // private fun installDatabaseFromAssets() {
-    //     val inputStream = context.assets.open("$ASSETS_PATH/$DATABASE_NAME.sqlite3")
 
-    //     try {
-    //         val outputFile = File(context.getDatabasePath(DATABASE_NAME).path)
-    //         val outputStream = FileOutputStream(outputFile)
-
-    //         inputStream.copyTo(outputStream)
-    //         inputStream.close()
-
-    //         outputStream.flush()
-    //         outputStream.close()
-    //     } catch (exception: Throwable) {
-    //         throw RuntimeException("The $DATABASE_NAME database couldn't be installed.", exception)
-    //     }
-    // }
     private fun installDatabaseFromAssets() {
     try {
         Log.d("Database", "Bắt đầu cài đặt database từ assets")
@@ -241,39 +226,6 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 
     }
 
-    // public fun getNote(id: Int): Note {
-    //     val db: SQLiteDatabase = this.readableDatabase
-    //     val columns: Array<String> = arrayOf("title", "content")
-    //     val filter: String = "id = ?"
-    //     val filterValues: Array<String> = arrayOf(id.toString())
-    //     val note: Note
-
-    //     val cursor: Cursor = db.query(false, TABLE_NOTES, columns, filter, filterValues,
-    //         "", "", "", "")
-
-    //     if (cursor.count != 1) {
-    //         throw Exception("Note not found")
-    //     }
-
-    //     cursor.moveToFirst()
-
-    //     // Lấy username từ SharedPreferences (hoặc nguồn lưu trữ khác)
-    //     val username = PreferenceHelper.getString("username")
-    //     if (username.isNullOrEmpty()) {
-    //         // Xử lý lỗi nếu không có username
-    //         throw Exception("Username is missing")
-    //     }
-
-    //     // Giải mã tiêu đề và nội dung trước khi tạo note
-    //     val decryptedTitle = CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("title")), username)
-    //     val decryptedContent = CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("content")), username)
-
-    //     note = Note(decryptedTitle, decryptedContent)
-    //     note.id = id
-
-    //     return note
-    // }
-
     public fun getNote(id: Int): Note {
     val db: SQLiteDatabase = this.readableDatabase
     val columns: Array<String> = arrayOf("id", "title", "content", "owner") // Thêm các cột cần thiết
@@ -308,6 +260,25 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         throw e
     }
 }
+
+    fun deleteNote(noteId: Int): Boolean {
+        return try {
+            val db = this.writableDatabase
+            val result = db.delete(TABLE_NOTES, "id = ?", arrayOf(noteId.toString()))
+
+            if (result > 0) {
+                Log.d("DatabaseHelper", "Note deleted successfully: $noteId")
+
+                true
+            } else {
+                Log.e("DatabaseHelper", "No note found with id: $noteId")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Error deleting note: ${e.message}")
+            false
+        }
+    }
 
     override fun getWritableDatabase(): SQLiteDatabase {
         // throw RuntimeException("The $DATABASE_NAME database is not writable.")

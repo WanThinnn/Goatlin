@@ -2,8 +2,11 @@ package com.cx.goatlin
 
 import android.content.Context
 import android.content.Intent
+import android.database.ContentObserver
 import android.database.Cursor
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -18,6 +21,7 @@ import com.cx.goatlin.api.service.Client
 import com.cx.goatlin.helpers.CryptoHelper
 import com.cx.goatlin.helpers.DatabaseHelper
 import com.cx.goatlin.helpers.PreferenceHelper
+import com.cx.goatlin.EditNoteActivity
 import com.cx.goatlin.models.Account
 import retrofit2.Call
 import retrofit2.Callback
@@ -29,11 +33,12 @@ class HomeActivity : AppCompatActivity() {
         Client.create()
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-         // Lấy username và set title
+        // Lấy username và set title
         val user_name: String = PreferenceHelper.getString("userName")
 
         if (user_name == "default_value") {
@@ -57,7 +62,6 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-//        Log.d("userID HomeActivity", owner)
 
 
         try {
@@ -65,29 +69,50 @@ class HomeActivity : AppCompatActivity() {
             if (cursor.count > 0) {
                 cursor.moveToFirst()
                 do {
-                    Log.d("HomeActivity", "Note: ${cursor.getString(cursor.getColumnIndex("title"))}")
+                    Log.d(
+                        "HomeActivity",
+                        "Note: ${cursor.getString(cursor.getColumnIndex("title"))}"
+                    )
                 } while (cursor.moveToNext())
 
                 val adapter = NoteCursorAdapter(this, R.layout.activity_home_note_item, cursor, 0)
                 listView.adapter = adapter
 
-                listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, id ->
-                    val intent = Intent(applicationContext, EditNoteActivity::class.java)
-                    intent.putExtra("NOTE_ID", id.toString())
-                    startActivity(intent)
-                }
+                listView.onItemClickListener =
+                    AdapterView.OnItemClickListener { _, _, position, id ->
+                        val intent = Intent(applicationContext, EditNoteActivity::class.java)
+                        intent.putExtra("NOTE_ID", id.toString())
+                        startActivity(intent)
+                    }
             } else {
                 Log.e("HomeActivity", "No notes found.")
             }
         } catch (e: Exception) {
             Log.e("HomeActivity", "Database error: ${e.message}")
         }
-
+        contentResolver.registerContentObserver(
+            NotesProvider.CONTENT_URI,
+            true,
+            contentObserver
+        )
     }
+
+
+    // Add ContentObserver
+    private val contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            refreshNotes()
+        }
+    }
+
+
     override fun onResume() {
         super.onResume()
         refreshNotes()
-        val prefs = applicationContext.getSharedPreferences(applicationContext.packageName, Context.MODE_PRIVATE)
+        val prefs = applicationContext.getSharedPreferences(
+            applicationContext.packageName,
+            Context.MODE_PRIVATE
+        )
 //        val user_id: Int = prefs.getInt("userId", -1)
         val user_name: String = PreferenceHelper.getString("userName")
         val dbHelper = DatabaseHelper(applicationContext)
@@ -121,11 +146,12 @@ class HomeActivity : AppCompatActivity() {
                 val adapter = NoteCursorAdapter(this, R.layout.activity_home_note_item, notes, 0)
                 listView.adapter = adapter
 
-                listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, id ->
-                    val intent = Intent(applicationContext, EditNoteActivity::class.java)
-                    intent.putExtra("NOTE_ID", id.toString())
-                    startActivity(intent)
-                }
+                listView.onItemClickListener =
+                    AdapterView.OnItemClickListener { _, _, position, id ->
+                        val intent = Intent(applicationContext, EditNoteActivity::class.java)
+                        intent.putExtra("NOTE_ID", id.toString())
+                        startActivity(intent)
+                    }
             } else {
                 Log.e("HomeActivity", "No notes found for user")
             }
@@ -134,6 +160,10 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        contentResolver.unregisterContentObserver(contentObserver)
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater: MenuInflater = menuInflater
@@ -147,6 +177,7 @@ class HomeActivity : AppCompatActivity() {
                 sync()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -179,7 +210,8 @@ class HomeActivity : AppCompatActivity() {
             }
 
             // Mã hóa thông tin xác thực
-            val encryptedPassword = Client.getBasicAuthorizationHeader(account.username, account.password)
+            val encryptedPassword =
+                Client.getBasicAuthorizationHeader(account.username, account.password)
 
             // Lấy danh sách ghi chú
             val cursor = try {
@@ -224,90 +256,66 @@ class HomeActivity : AppCompatActivity() {
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
+
     private fun showOK(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
-//    private fun sync() {
-//        val password: String = ""
-//        val username: String = PreferenceHelper.getString("userID", "")
-//        val account: Account = DatabaseHelper(applicationContext).getAccount(username)
-//        val encryptedPassword: String = Client.getBasicAuthorizationHeader(account.username, account.password)
-//        val cursor: Cursor = DatabaseHelper(applicationContext).listNotes(account.id)
-//        while (cursor.moveToNext()) {
-//            val id: Int = cursor.getInt(cursor.getColumnIndex("_id"))
-//            val title: String = cursor.getString(cursor.getColumnIndex("title"))
-//            val content: String = cursor.getString(cursor.getColumnIndex("content"))
-//            val createdAt: String = cursor.getString(cursor.getColumnIndex("createdAt"))
-//            val note: Note = Note(title, content, createdAt)
-//
-//            val call: Call<Void> = apiService.syncNote(encryptedPassword,username,id, note)
-//            call.enqueue(object: Callback<Void> {
-//                override fun onFailure(call: Call<Void>, t: Throwable) {
-//                    Log.e("Sync", t.message.toString())
-//                }
-//            /*
-//            - Ở đây có thể xảy ra Security Logging and Monitoring Failures bởi vì nó có ghi lại thông tin ID  của note khi gặp lỗi
-//            -> kẻ tấn công có thể lấy được thông tin nhạy cảm trong log
-//            - Đề xuất: Hạn chế để thông tin nhạy cảm trong log hoặc mã hóa lại file log
-//             */
-//                override fun onResponse(call: Call<Void>, response: Response<Void>) {
-//                    Log.i("Sync", "Note #$id: ${response.code()}")
-//                }
-//            })
-//        }
-//    }
-    private fun refreshNotes() {
-        val owner = PreferenceHelper.getString("userId", "default_value")
 
-        if (owner != "default_value") {
+    private fun refreshNotes() {
+        val username = PreferenceHelper.getString("userName", "")
+        if (username.isNotEmpty()) {
             try {
-                val cursor = DatabaseHelper(this).listNotes(owner.toInt())
+                val owner = DatabaseHelper(applicationContext).getAccount(username)
+                val cursor = DatabaseHelper(this).listNotes(owner.id)
+
+                // Clear existing adapter first
+                listView.adapter = null
+
                 if (cursor != null && cursor.count > 0) {
-                    (listView.adapter as? NoteCursorAdapter)?.changeCursor(cursor)
+                    val adapter =
+                        NoteCursorAdapter(this, R.layout.activity_home_note_item, cursor, 0)
+                    listView.adapter = adapter
+
+                    listView.onItemClickListener =
+                        AdapterView.OnItemClickListener { _, _, position, id ->
+                            val intent = Intent(applicationContext, EditNoteActivity::class.java)
+                            intent.putExtra("NOTE_ID", id.toString())
+                            startActivity(intent)
+                        }
+                } else {
+                    Log.d("HomeActivity", "No notes found")
+                    cursor?.close()
                 }
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Error refreshing notes: ${e.message}")
             }
         }
     }
-}
-    // In HomeActivity.kt
 
-//old:
-//class NoteCursorAdapter(context: Context, layout: Int, cursor: Cursor, flags: Int) : ResourceCursorAdapter(context, layout, cursor, flags) {
-//    /*
-//    - Khả năng xảy ra Cryptography Failure ( Ceaser)
-//    - Đề xuất: sử dụng thuật toán mạnh mẽ hơn
-//     */
-//    override fun bindView(view: View, context: Context, cursor: Cursor) {
-//        val title = view.findViewById(R.id.title) as TextView
-//        title.text = CryptoHelper.decrypt(cursor.getString(cursor.getColumnIndex("title")))
-//    }
-//
-//}
+    //new:
+    class NoteCursorAdapter(context: Context, layout: Int, cursor: Cursor, flags: Int) :
+        ResourceCursorAdapter(context, layout, cursor, flags) {
 
-//new:
-class NoteCursorAdapter(context: Context, layout: Int, cursor: Cursor, flags: Int) : ResourceCursorAdapter(context, layout, cursor, flags) {
+        override fun bindView(view: View, context: Context, cursor: Cursor) {
+            val title = view.findViewById<TextView>(R.id.title)
 
-    override fun bindView(view: View, context: Context, cursor: Cursor) {
-        val title = view.findViewById<TextView>(R.id.title)
+            // Lấy username từ SharedPreferences (hoặc nguồn lưu trữ khác)
+            val username = PreferenceHelper.getString("userName")
+            if (username.isEmpty()) {
+                // Xử lý lỗi nếu username không tồn tại
+                title.text = "Unknown User"
+                return
+            }
 
-        // Lấy username từ SharedPreferences (hoặc nguồn lưu trữ khác)
-        val username = PreferenceHelper.getString("userName")
-        if (username.isEmpty()) {
-            // Xử lý lỗi nếu username không tồn tại
-            title.text = "Unknown User"
-            return
-        }
-
-        // Giải mã tiêu đề trước khi hiển thị
-        val encryptedTitle = cursor.getString(cursor.getColumnIndex("title"))
-        try {
-            title.text = CryptoHelper.decrypt(encryptedTitle, username)
-        } catch (e: Exception) {
-            // Xử lý lỗi khi giải mã
-            e.printStackTrace()
-            title.text = "Error decrypting title"
+            // Giải mã tiêu đề trước khi hiển thị
+            val encryptedTitle = cursor.getString(cursor.getColumnIndex("title"))
+            try {
+                title.text = CryptoHelper.decrypt(encryptedTitle, username)
+            } catch (e: Exception) {
+                // Xử lý lỗi khi giải mã
+                e.printStackTrace()
+                title.text = "Error decrypting title"
+            }
         }
     }
 }

@@ -71,21 +71,38 @@ class EditNoteActivity : AppCompatActivity() {
 
                 true
             }
+             R.id.delete -> {
+            showDeleteConfirmation()
+            true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+    private fun showDeleteConfirmation() {
+    android.app.AlertDialog.Builder(this)
+        .setTitle("Delete Note")
+        .setMessage("Are you sure you want to delete this note?")
+        .setPositiveButton("Delete") { _, _ ->
+            deleteNote()
+        }
+        .setNegativeButton("Cancel", null)
+        .show()
+}
 
     /**
      * Initializes internal "note" property with a new Note or one from database depending on
      * whether intent string extra "NOTE_ID" is defined
      */
     // Trong EditNoteActivity.kt
-    private fun initializeNote() {
+   private fun initializeNote() {
     val noteId: String? = intent.getStringExtra("NOTE_ID")
     val OldSessionUser = PreferenceHelper.getString("userName")
     PreferenceHelper.removeKey(OldSessionUser)
-    val username = PreferenceHelper.getString("userName", "") // Đổi "username" thành "userName"
+    val username = PreferenceHelper.getString("userName", "")
 
+    // Remove this line as listView doesn't exist in EditNoteActivity
+    // listView.adapter = null 
 
     if (noteId != null) {
         try {
@@ -94,7 +111,6 @@ class EditNoteActivity : AppCompatActivity() {
             // Giải mã nội dung
             if (username.isNotEmpty()) {
                 try {
-                    // Note đã được lấy từ DB, giải mã để hiển thị
                     note.title = CryptoHelper.decrypt(note.title, username)
                     note.content = CryptoHelper.decrypt(note.content, username)
                     
@@ -110,8 +126,8 @@ class EditNoteActivity : AppCompatActivity() {
         }
     } else {
         note = Note("", "")
+        }
     }
-}
 
     /**
      * Saves internal note property to database
@@ -160,7 +176,20 @@ class EditNoteActivity : AppCompatActivity() {
         return status
     }
 
+    private fun deleteNote() {
 
+    if (note.id != -1) {
+        val deleted = DatabaseHelper(applicationContext).deleteNote(note.id)
+        if (deleted) {
+            // Notify content resolver to update UI
+            applicationContext.contentResolver.notifyChange(NotesProvider.CONTENT_URI, null)
+            finish()
+
+        } else {
+            showError("Could not delete note!")
+        }
+    }
+}
     /**
      * Show a Toast with given error message
      *
