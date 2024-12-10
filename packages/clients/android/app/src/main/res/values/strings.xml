@@ -25,7 +25,7 @@
     <string name="prompt_confirm_password">Confirm Password</string>
 
     <!-- Home screen related strings -->
-    <string name="title_activity_home">My Notes</string>
+    <string name="title_activity_home">%1$s\</string>
     <string name="sync">Sync</string>
     <string name="logout">Log out</string>
 

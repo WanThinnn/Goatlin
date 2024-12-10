@@ -82,7 +82,10 @@ class EditNoteActivity : AppCompatActivity() {
     // Trong EditNoteActivity.kt
     private fun initializeNote() {
     val noteId: String? = intent.getStringExtra("NOTE_ID")
+    val OldSessionUser = PreferenceHelper.getString("userName")
+    PreferenceHelper.removeKey(OldSessionUser)
     val username = PreferenceHelper.getString("userName", "") // Đổi "username" thành "userName"
+
 
     if (noteId != null) {
         try {

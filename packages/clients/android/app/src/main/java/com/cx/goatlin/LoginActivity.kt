@@ -49,14 +49,15 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
     private var mAuthTask: UserLoginTask? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         PreferenceHelper.init(applicationContext)
 
         setContentView(R.layout.activity_login)
         /* Kiểm tra ROOT */
-//        if (RootDetectionHelper.isDeviceRooted(applicationContext)) {
-//            forceCloseApp()
-//        }
+        if (RootDetectionHelper.isDeviceRooted(applicationContext)) {
+            forceCloseApp()
+        }
         // Set up the login form.
         populateAutoComplete()
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
@@ -263,23 +264,16 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         // Khắc phục: Dùng ExecutorService hoặc WorkManager để quản lý các tác vu bất đồng bộ một cách hiệu quả hơn.
 
         override fun doInBackground(vararg params: Void): Boolean? {
-//            if ((mUsername == "Supervisor") and (mPassword == "MySuperSecretPassword123!")){
-//                return true
-//            }
-//            else {
                 try {
                     val account: Account = DatabaseHelper(applicationContext).getAccount(mUsername)
 
                     if (!CryptoHelper.verifypw(mPassword, account.password)) {
-                        return false;
+                        return false
                     }
 
-                    val prefs: SharedPreferences = applicationContext.getSharedPreferences(
-                            applicationContext.packageName, Context.MODE_PRIVATE)
-                    val editor: SharedPreferences.Editor = prefs.edit()
-
-                    editor.putInt("userId", account.id).apply()
-                    editor.putString("userName", mUsername).apply()
+                    // Sử dụng PreferenceHelper để lưu thông tin đăng nhập
+                    PreferenceHelper.setString("userName", mUsername)
+                    PreferenceHelper.setString("userId", account.id.toString())
 
                     return account.id > -1
                 } catch(e: Exception){

@@ -32,6 +32,22 @@ class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+         // Lấy username và set title
+        val user_name: String = PreferenceHelper.getString("userName")
+
+        if (user_name == "default_value") {
+            Log.e("HomeActivity", "User ID not found")
+            return // Nếu không có userId, dừng tiếp tục thực hiện
+        }
+
+
+        val dbHelper = DatabaseHelper(applicationContext)
+        val owner = dbHelper.getAccount(user_name)
+        val title = getString(R.string.title_activity_home, owner.name)
+        setTitle(title)
+
+
         listView = findViewById(R.id.list)
         setSupportActionBar(toolbar)
         PreferenceHelper.init(applicationContext)
@@ -41,16 +57,11 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        val owner = PreferenceHelper.getString("userId", "default_value")
-        Log.d("userID HomeActivity", owner)
+//        Log.d("userID HomeActivity", owner)
 
-        if (owner == "default_value") {
-            Log.e("HomeActivity", "User ID not found")
-            return // Nếu không có userId, dừng tiếp tục thực hiện
-        }
 
         try {
-            val cursor: Cursor = DatabaseHelper(this).listNotes(owner.toInt())
+            val cursor: Cursor = DatabaseHelper(this).listNotes(owner.id.toInt())
             if (cursor.count > 0) {
                 cursor.moveToFirst()
                 do {
@@ -81,7 +92,6 @@ class HomeActivity : AppCompatActivity() {
         val user_name: String = PreferenceHelper.getString("userName")
         val dbHelper = DatabaseHelper(applicationContext)
         val owner = dbHelper.getAccount(user_name)
-        Log.d("HomeActivity", "Owner ID: $owner")
 
         if (owner.id == -1) {
             val intent = Intent(this, LoginActivity::class.java)
@@ -100,13 +110,11 @@ class HomeActivity : AppCompatActivity() {
 
                     val title = notes.getString(notes.getColumnIndex("title"))
                     val encryptedContent = notes.getString(notes.getColumnIndex("content"))
-                    Log.d("HomeActivity", "Note - Title: $title, Content: $encryptedContent")
 
                     // Giải mã nội dung ghi chú bằng khóa người dùng
                     val decryptedContent = CryptoHelper.decrypt(encryptedContent, owner.username)
 
                     // Log hoặc hiển thị nội dung đã giải mã
-                    Log.d("HomeActivity", "Decrypted Content: $decryptedContent")
 
                 } while (notes.moveToNext())
 
