@@ -20,7 +20,7 @@
 
     <!-- Strings related to signup -->
     <string name="title_activity_signup">Signup</string>
-    <string name="prompt_name">Name</string>
+    <string name="prompt_name">Full name</string>
     <string name="prompt_surname">Surname</string>
     <string name="prompt_confirm_password">Confirm Password</string>
 
