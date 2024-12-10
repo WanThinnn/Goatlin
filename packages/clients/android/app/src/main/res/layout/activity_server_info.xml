@@ -59,6 +59,8 @@
             android:id="@+id/buttonSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save" />
+            android:background="@drawable/button_selector"
+            android:text="Save"
+            android:textColor="?android:attr/windowBackground" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

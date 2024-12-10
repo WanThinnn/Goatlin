@@ -70,7 +70,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:background="@drawable/button_selector"
                 android:text="@string/action_sign_in_short"
+                android:textColor="?android:attr/windowBackground"
                 android:textStyle="bold" />
 
             <TextView
@@ -85,7 +87,9 @@
                 style="?android:textAppearanceSmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/button_selector"
                 android:text="@string/action_sign_up_short"
+                android:textColor="?android:attr/windowBackground"
                 android:textStyle="bold" />
 
         </LinearLayout>
