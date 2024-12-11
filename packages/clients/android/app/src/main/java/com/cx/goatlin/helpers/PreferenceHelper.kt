@@ -47,11 +47,7 @@ PreferenceHelper {
     private lateinit var sharedPreferences: SharedPreferences
     private const val KEY_ALIAS = "MySecureKey"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
-//    fun init(context: Context) {
-//        if (!this::sharedPreferences.isInitialized) {
-//            sharedPreferences = context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
-//        }
-//    }
+
     fun init(context: Context) {
         if (!this::sharedPreferences.isInitialized) {
             sharedPreferences = context.getSharedPreferences("${context.packageName}_secure", Context.MODE_PRIVATE)

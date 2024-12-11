@@ -106,7 +106,6 @@ class EditNoteActivity : AppCompatActivity() {
                     note.title = CryptoHelper.decrypt(note.title, username)
                     note.content = CryptoHelper.decrypt(note.content, username)
                     
-                    Log.d("EditNoteActivity", "Giải mã thành công - Title: ${note.title}")
                 } catch (e: Exception) {
                     Log.e("EditNoteActivity", "Lỗi giải mã: ${e.message}")
                     showError("Không thể giải mã nội dung")
@@ -148,13 +147,11 @@ class EditNoteActivity : AppCompatActivity() {
         // Kiểm tra nếu đây là ghi chú mới hoặc ghi chú cần cập nhật
         if (note.id == -1) {
             val userId = PreferenceHelper.getString("userId")
-            Log.d("EditnoteActivity", "UserId is: $userId")
             if (userId.isEmpty()) {
                 showError("User ID is missing!")
                 return false
             }
             note.owner = userId.toInt()
-            Log.d("owner", note.owner.toString())
 
             status = DatabaseHelper(applicationContext).addNote(note)
         } else {

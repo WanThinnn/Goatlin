@@ -41,7 +41,6 @@ class SignupActivity : AppCompatActivity() {
      * Attempts to create a new account on back-end
      */
     private fun attemptSignup() {
-        Log.d("SignupActivity", "Signup attempt started") // Kiểm tra khi người dùng bấm đăng ký
         var name: String = this.name.text.toString()
         val username: String = this.email.text.toString().lowercase()
         val password: String = this.password.text.toString()
@@ -110,11 +109,7 @@ class SignupActivity : AppCompatActivity() {
                             val account_email = new_account.username
                             PreferenceHelper.setString("userId", account_id.toString())
                             PreferenceHelper.setString("userName", account_email)
-                            val userId = PreferenceHelper.getString("userId")
-                            val userName = PreferenceHelper.getString("userName")
 
-                            Log.d("HomeActivity", "UserId is: $userId")
-                            Log.d("HomeActivity", "UserName is: $userName")
 
                             // Hiển thị thông báo thành công
                             message = "Account created successfully!"

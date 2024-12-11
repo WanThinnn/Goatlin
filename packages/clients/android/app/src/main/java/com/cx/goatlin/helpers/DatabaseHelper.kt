@@ -166,7 +166,6 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
         val columns: Array<String> = arrayOf("id AS _id", "title", "content", "createdAt")
         val filter: String = "owner = ?"
         val filterValues: Array<String> = arrayOf(owner.toString())
-        Log.d("User ID", owner.toString())
         return db.query(false, TABLE_NOTES, columns, filter, filterValues,
             "","","","")
 
@@ -213,11 +212,11 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
             val result = db.delete(TABLE_NOTES, "id = ?", arrayOf(noteId.toString()))
 
             if (result > 0) {
-                Log.d("DatabaseHelper", "Note deleted successfully: $noteId")
+                Log.d("DatabaseHelper", "Note deleted successfully")
 
                 true
             } else {
-                Log.e("DatabaseHelper", "No note found with id: $noteId")
+                Log.e("DatabaseHelper", "No note found with id")
                 false
             }
         } catch (e: Exception) {

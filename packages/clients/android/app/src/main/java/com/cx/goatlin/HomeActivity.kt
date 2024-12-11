@@ -127,7 +127,6 @@ class HomeActivity : AppCompatActivity() {
 
         try {
             val notes: Cursor = DatabaseHelper(this).listNotes(owner.id)
-            Log.d("HomeActivity", "Notes cursor count: ${notes?.count ?: 0}")
 
             if (notes != null && notes.count > 0) {
                 notes.moveToFirst()
@@ -200,13 +199,7 @@ class HomeActivity : AppCompatActivity() {
     private fun performLogout() {
         // Xóa dữ liệu người dùng (nếu có) và chuyển hướng về màn hình đăng nhập
         val sharedPref = getSharedPreferences("user_session", MODE_PRIVATE)
-        // In tất cả các giá trị trong SharedPreferences
-        val allPrefs = sharedPref.all  // Trả về một Map<String, *>
 
-        // In các giá trị của session ra Log
-        for ((key, value) in allPrefs) {
-            Log.d("UserSession", "$key: $value")
-        }
         sharedPref.edit().clear().apply()
 
         // Chuyển sang màn hình Login
