@@ -81,8 +81,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
             ActivityCompat.requestPermissions(
                 this, arrayOf(android.Manifest.permission.READ_CONTACTS), 1)
 
-            //ActivityCompat, ContextCompat có thể gây lỗi nếu không kiểm tra quyền trước khi gọi
-            //Khắc phục: Kiểm tra và yêu cầu quyền truy cập cẩn thận trước khi dùng
         }
     }
 
@@ -101,8 +99,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
     private fun populateAutoComplete() {
         loaderManager.initLoader(0, null, this)
 
-        //LoaderManager đã bị loại bỏ trong các phiên bản Android mới
-        //Khắc phục: Dùng ViewModel và LiveData thay thế
 
     }
     private fun forceCloseApp() {
@@ -120,11 +116,7 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         alert.setTitle("Unsafe Device")
         alert.show()
     }
-    /**
-     * Attempts to sign in the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the errors are presented and
-     * no actual login attempt is made.
-     */
+
     private fun attemptLogin() {
         if (mAuthTask != null) {
             return
@@ -173,9 +165,7 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private fun showProgress(show: Boolean) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
@@ -199,8 +189,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                         }
                     })
         } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
             login_progress.visibility = if (show) View.VISIBLE else View.GONE
             login_form.visibility = if (show) View.GONE else View.VISIBLE
         }
@@ -210,16 +198,12 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
     override fun onCreateLoader(i: Int, bundle: Bundle?): Loader<Cursor> {
         checkAndPromptUserToGrantPermissions();
         return CursorLoader(this,
-                // Retrieve data rows for the device user's 'profile' contact.
                 Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
                         ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
 
-                // Select only email addresses.
                 ContactsContract.Contacts.Data.MIMETYPE + " = ?", arrayOf(ContactsContract.CommonDataKinds.Email
                 .CONTENT_ITEM_TYPE),
 
-                // Show primary email addresses first. Note that there won't be
-                // a primary email address if the user hasn't specified one.
                 ContactsContract.Contacts.Data.IS_PRIMARY + " DESC")
     }
 
@@ -239,7 +223,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
     }
 
     private fun addEmailsToAutoComplete(emailAddressCollection: List<String>) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         val adapter = ArrayAdapter(this@LoginActivity,
                 android.R.layout.simple_dropdown_item_1line, emailAddressCollection)
 
@@ -260,8 +243,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
      */
     inner class UserLoginTask internal constructor(private val mUsername: String, private val mPassword: String) : AsyncTask<Void, Void, Boolean>() {
 
-        // AsyncTask có thể gây rò rỉ bộ nhớ nếu không được quản lí đúng cách, khi hoạt động của nó kéo dài hơn Activity. Ngoài ra AsyncTask không phù hợp cho các tác vụ dài hạn hoặc phức tạp
-        // Khắc phục: Dùng ExecutorService hoặc WorkManager để quản lý các tác vu bất đồng bộ một cách hiệu quả hơn.
 
         override fun doInBackground(vararg params: Void): Boolean? {
                 try {
@@ -271,7 +252,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                         return false
                     }
 
-                    // Sử dụng PreferenceHelper để lưu thông tin đăng nhập
                     PreferenceHelper.setString("userName", mUsername)
                     PreferenceHelper.setString("userId", account.id.toString())
 
@@ -290,7 +270,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                 var homeIntent = Intent(this@LoginActivity,HomeActivity::class.java)
                 startActivity(homeIntent)
 
-                //finish()
             } else {
                 password.error = getString(R.string.error_incorrect_password)
                 password.requestFocus()
