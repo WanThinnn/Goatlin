@@ -57,13 +57,7 @@ class DatabaseHelper (val context: Context) : SQLiteOpenHelper(context, DATABASE
 }
 
     @Synchronized
-    // private fun installOrUpdateIfNecessary() {
-    //     if (installedDatabaseIsOutdated()) {
-    //         context.deleteDatabase(DATABASE_NAME)
-    //         installDatabaseFromAssets()
-    //         writeDatabaseVersionInPreferences()
-    //     }
-    // }
+
     private fun installOrUpdateIfNecessary() {
     try {
         if (installedDatabaseIsOutdated()) {

@@ -224,7 +224,7 @@ class HomeActivity : AppCompatActivity() {
             // Kiểm tra user đã đăng nhập
             val username = PreferenceHelper.getString("userName", "")
             if (username.isEmpty()) {
-                showError("Vui lòng đăng nhập để đồng bộ")
+                showError("Please login first")
                 return
             }
 
@@ -232,8 +232,7 @@ class HomeActivity : AppCompatActivity() {
             val account = try {
                 DatabaseHelper(applicationContext).getAccount(username)
             } catch (e: Exception) {
-                Log.e("Sync", "Lỗi lấy thông tin tài khoản: ${e.message}")
-                showError("Không thể lấy thông tin tài khoản")
+                showError("Cannot get account information")
                 return
             }
 
@@ -245,8 +244,7 @@ class HomeActivity : AppCompatActivity() {
             val cursor = try {
                 DatabaseHelper(applicationContext).listNotes(account.id)
             } catch (e: Exception) {
-                Log.e("Sync", "Lỗi lấy danh sách ghi chú: ${e.message}")
-                showError("Không thể lấy danh sách ghi chú")
+                showError("Cannot get notes")
                 return
             }
 
@@ -264,20 +262,17 @@ class HomeActivity : AppCompatActivity() {
                     apiService.syncNote(encryptedPassword, username, id, note)
                         .enqueue(object : Callback<Void> {
                             override fun onFailure(call: Call<Void>, t: Throwable) {
-                                Log.e("Sync", "Lỗi đồng bộ ghi chú #$id: ${t.message}")
                             }
 
                             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                                 syncCount++
-                                Log.d("Sync", "Đồng bộ ghi chú #$id thành công")
                                 showOK("Notes synced successfully")
                             }
                         })
                 }
             }
         } catch (e: Exception) {
-            Log.e("Sync", "Lỗi đồng bộ: ${e.message}")
-            showError("Lỗi trong quá trình đồng bộ")
+            showError("Error! Cannot sync notes")
         }
     }
 
