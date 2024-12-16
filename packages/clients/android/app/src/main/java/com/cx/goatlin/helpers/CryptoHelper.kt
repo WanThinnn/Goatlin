@@ -113,7 +113,7 @@ class CryptoHelper {
 
         // Mã hóa mật khẩu bằng Bcrypt
         fun encryptpw(original: String): String {
-            return BCrypt.with(LongPasswordStrategies.hashSha512(BCrypt.Version.VERSION_2A)).hashToString(6, original.toCharArray()); //allows to honour all pw bytes
+            return BCrypt.with(LongPasswordStrategies.hashSha512(BCrypt.Version.VERSION_2A)).hashToString(14, original.toCharArray()); //allows to honour all pw bytes
         }
 
         // Kiểm tra mật khẩu với Bcrypt
